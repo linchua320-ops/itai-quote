@@ -2320,5 +2320,106 @@ showSections();
 // Set calc tab active
 document.getElementById('btnCalc').classList.add('active');
 </script>
+
+<!-- 報價單串接：只有被「毅太行動報價單」開啟（嵌入）時才會啟用，獨立使用時完全不受影響 -->
+<style>
+body.embed .status-bar{display:none}
+body.embed .btn-copy{padding:12px 11px}
+.btn-addquote{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:12px 14px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:.5px;white-space:nowrap}
+.btn-addquote:active{opacity:.8}
+.bath-addquote{display:block;width:100%;margin-top:10px;padding:13px}
+</style>
+<script>
+(function(){
+  var EMBED = false;
+  try{ EMBED = window.parent !== window; }catch(e){ EMBED = true; }
+  if(!EMBED) return;
+  document.body.classList.add('embed');
+
+  function absUrl(rel){ try{ return new URL(rel, location.href).href; }catch(e){ return null; } }
+  // 給客戶看的品名：拿掉內部用的折數、每才單價、「不打折」等字樣
+  function cleanLabel(s){
+    return String(s).replace(/（(不打折|經銷價)）/g,'').replace(/×\$\d+/g,'').replace(/\s*×\d+(\.\d+)?折/g,'').replace(/\s+/g,' ').trim();
+  }
+  function send(items){
+    window.parent.postMessage({type:'itai_add_items', items:items}, '*');
+    showToast('✓ 已加入報價單');
+  }
+
+  // ── 拉門：主體一列（牌價折後＋安裝＋丈量），其餘加購各自一列，加總等於畫面上的合計估價 ──
+  window.addDoorToQuote = function(){
+    if(!selectedId){ showToast('請先選擇款式'); return; }
+    var q = computeQuote();
+    if(!q || !q.item){ showToast('請完成規格選擇'); return; }
+    var p = q.p, item = q.item;
+    var spec = item.variant.path.concat(item.color?[item.color.label]:[],[item.size.label]).join('／');
+    var doorPrice = 0, notes = [], extras = [];
+    q.lines.forEach(function(l){
+      if(l.info) return;
+      if(l.cls === 'disc'){ doorPrice += l.amount||0; return; }
+      if(/^安裝費/.test(l.label)){ doorPrice += l.amount||0; notes.push('含基本安裝'); return; }
+      if(/^丈量費/.test(l.label)){ doorPrice += l.amount||0; notes.push('含丈量'); return; }
+      if(!l.amount){ if(!l.skipCopy && /^把手換/.test(l.label)) notes.push(cleanLabel(l.label)); return; }
+      extras.push({name:cleanLabel(l.label), specW:'', specH:'', qty:1, price:l.amount, note:l.sub||''});
+    });
+    var items = [{
+      name: p.name.replace('\n',' ') + ' ' + spec,
+      specW: q.w ? String(q.w) : '', specH: q.h ? String(q.h) : '',
+      qty: 1, price: doorPrice, note: notes.join('、'),
+      photo: p.img ? absUrl(p.img) : null
+    }].concat(extras);
+    var sum = items.reduce(function(s,it){ return s + it.price*it.qty; }, 0);
+    if(sum !== q.total){   // 保險：金額對不上就整筆合併成一列，確保報價單金額與試算一致
+      items = [{name:items[0].name, specW:items[0].specW, specH:items[0].specH, qty:1, price:q.total,
+                note:extras.map(function(x){ return x.name; }).concat(notes).join('、'), photo:items[0].photo}];
+    }
+    send(items);
+  };
+
+  // ── 衛浴設備：每項產品一列（單價含安裝費），拆除舊馬桶／清運各自一列 ──
+  window.addBathToQuote = function(){
+    var items = [], removeQty = 0, haulQty = 0;
+    BATH_CATEGORIES.forEach(function(cat){
+      Object.keys(bathCart).forEach(function(id){
+        var v = bathCart[id];
+        if(v.catId !== cat.id) return;
+        var fee = v.installFeeOverride !== undefined ? v.installFeeOverride : cat.installFee;
+        items.push({name:v.name+' '+v.model, specW:'', specH:'', qty:v.qty, price:v.price+(fee||0),
+                    note: fee ? '含安裝' : '', photo: BATH_PHOTOS.has(id) ? absUrl('bath_imgs/'+id+'.jpg') : null});
+        if(TOILET_CATS.includes(cat.id) && toiletRemoval[id]){
+          if(toiletRemoval[id].removeOld) removeQty += v.qty;
+          if(toiletRemoval[id].haul) haulQty += v.qty;
+        }
+      });
+    });
+    if(!items.length){ showToast('請先選擇產品'); return; }
+    if(removeQty) items.push({name:'拆除舊馬桶', specW:'', specH:'', qty:removeQty, price:800, note:''});
+    if(haulQty) items.push({name:'清運費', specW:'', specH:'', qty:haulQty, price:1800, note:''});
+    send(items);
+  };
+
+  // 拉門：在底部合計列加上「加入報價單」
+  var bar = document.querySelector('#quoteBar .quote-bar-inner');
+  if(bar){
+    var copyBtn = bar.querySelector('.btn-copy');
+    if(copyBtn) copyBtn.textContent = '📋';
+    var b = document.createElement('button');
+    b.className = 'btn-addquote'; b.textContent = '＋ 加入報價單';
+    b.onclick = function(){ window.addDoorToQuote(); };
+    bar.appendChild(b);
+  }
+  // 衛浴：在已選清單下方加上「加入報價單」
+  var _renderBathSummary = renderBathSummary;
+  renderBathSummary = function(){
+    _renderBathSummary();
+    var body = document.getElementById('bathSummaryBody');
+    if(!body || !Object.keys(bathCart).length) return;
+    var b = document.createElement('button');
+    b.className = 'btn-addquote bath-addquote'; b.textContent = '＋ 加入報價單';
+    b.onclick = function(){ window.addBathToQuote(); };
+    body.appendChild(b);
+  };
+})();
+</script>
 </body>
 </html>
