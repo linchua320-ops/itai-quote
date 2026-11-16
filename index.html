@@ -1,0 +1,2324 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>一太e衛浴｜報價計算器</title>
+<meta name="theme-color" content="#1a2744">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="一太報價">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+:root{
+  --navy:#1a2744;--gold:#c9a84c;--gold-l:#e8c97a;--gold-bg:#fffbf0;
+  --cream:#faf8f3;--cream-d:#f0ece0;--text:#2c2c2c;--muted:#7a7a7a;
+  --white:#fff;--border:#d8d0bc;--success:#1e7e34;--red:#c0392b;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:'Noto Sans TC',sans-serif;background:var(--navy)}
+/* ── App shell ── */
+#app{display:flex;flex-direction:column;height:100%;max-width:430px;margin:0 auto;background:var(--cream);position:relative;overflow:hidden}
+.status-bar{height:var(--safe-top);background:var(--navy);flex-shrink:0}
+/* ── Header ── */
+.header{background:var(--navy);padding:10px 12px 10px;flex-shrink:0;position:relative}
+.header-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.header-logo{font-family:'Noto Serif TC',serif;font-size:18px;font-weight:700;color:var(--gold);letter-spacing:1.5px;white-space:nowrap}
+.header-sub{font-size:10.5px;color:rgba(255,255,255,.5);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-right{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
+.hbtn{background:rgba(255,255,255,.1);border:none;border-radius:9px;color:rgba(255,255,255,.85);font-size:13.5px;padding:9px 6px;min-height:40px;cursor:pointer;font-family:inherit;white-space:nowrap;text-align:center}
+.hbtn.active{background:var(--gold);color:var(--navy);font-weight:700}
+/* ── Scroll area ── */
+#mainScroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:12px 12px 120px}
+/* ── Quote bar ── */
+.quote-bar{flex-shrink:0;background:var(--white);border-top:1px solid var(--border);padding:10px 14px calc(10px + var(--safe-bottom));box-shadow:0 -4px 20px rgba(26,39,68,.1)}
+.quote-bar-inner{display:flex;align-items:center;gap:10px}
+.qb-price-wrap{flex:1}
+.qb-lbl{font-size:10px;color:var(--muted);letter-spacing:1px}
+.qb-amount{font-size:22px;font-weight:700;color:var(--navy);font-family:'Noto Serif TC',serif}
+.qb-amount.pending{font-size:13px;color:var(--muted);font-family:'Noto Sans TC',sans-serif;font-weight:400}
+.btn-copy{background:var(--gold);color:var(--navy);border:none;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:.5px;white-space:nowrap;flex-shrink:0}
+/* ── Cards ── */
+.section{background:var(--white);border-radius:14px;margin-bottom:10px;box-shadow:0 2px 10px rgba(26,39,68,.07);overflow:hidden}
+.section-hdr{background:var(--navy);color:white;padding:11px 15px;display:flex;align-items:center;gap:9px}
+.snum{background:var(--gold);color:var(--navy);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.stitle{font-size:13.5px;font-weight:500;letter-spacing:.5px}
+.section-body{padding:13px 14px}
+/* ── Product grid ── */
+.product-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.product-card{border:2px solid var(--border);border-radius:11px;cursor:pointer;overflow:hidden;background:var(--cream);position:relative;transition:border-color .15s,box-shadow .15s}
+.product-card.selected{border-color:var(--gold);background:var(--gold-bg);box-shadow:0 0 0 1px var(--gold)}
+.product-card.selected::after{content:'✓';position:absolute;top:7px;right:8px;background:var(--gold);color:var(--navy);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;line-height:20px;text-align:center}
+.product-card img{width:100%;height:84px;object-fit:cover;display:block;background:#e8e0d0}
+.pc-body{padding:7px 9px 9px}
+.pc-series{font-size:9.5px;color:var(--muted);letter-spacing:.5px;margin-bottom:1px}
+.pc-name{font-size:11.5px;font-weight:500;color:var(--navy);line-height:1.35;margin-bottom:3px}
+.pc-price{font-size:10px;color:var(--muted)}
+.pc-badge{font-size:9px;padding:1px 5px;border-radius:3px;margin-top:3px;display:inline-block}
+.b-inc{background:#e3f5e3;color:var(--success)}
+.b-ext{background:#fef3e2;color:#b86e00}
+.edit-hint{font-size:10.5px;color:var(--gold);text-align:right;margin-bottom:7px}
+/* ── Chips ── */
+.step-label{font-size:12px;color:var(--muted);margin-bottom:6px}
+.step-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px}
+.step-row:last-child{margin-bottom:0}
+.chip{padding:7px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:var(--cream);cursor:pointer;color:var(--navy);font-family:inherit;transition:all .12s;white-space:nowrap}
+.chip.sel{background:var(--navy);border-color:var(--navy);color:white}
+.chip:active{opacity:.75}
+.height-pill{display:inline-block;background:var(--navy);color:var(--gold-l);font-size:13px;font-weight:500;padding:5px 13px;border-radius:20px;margin-top:4px}
+.spec-note{font-size:11px;color:var(--muted);margin-top:9px;padding:7px 10px;background:var(--cream-d);border-radius:7px;line-height:1.6}
+/* ── Form ── */
+label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.form-group{margin-bottom:12px}
+.form-group:last-child{margin-bottom:0}
+input[type=number]{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:16px;font-family:inherit;background:var(--cream);color:var(--text);appearance:none;-webkit-appearance:none;outline:none;transition:border-color .2s}
+input[type=number]:focus{border-color:var(--gold)}
+.height-display{background:var(--cream-d);border:1.5px solid var(--border);border-radius:9px;padding:11px 13px;font-size:16px;color:var(--navy);font-weight:500}
+.height-hint{font-size:11px;color:var(--muted);margin-top:-4px}
+.height-hint strong{color:var(--navy)}
+input[type=number]:disabled{color:var(--muted);font-size:13px;background:var(--cream-d)}
+.addon-detail{padding:10px 0 12px;border-bottom:1px solid var(--cream-d)}
+.addon-note{font-size:11.5px;color:var(--muted);line-height:1.6;margin:6px 0}
+.addon-note strong{color:var(--navy)}
+.addon-note a{color:var(--navy);font-weight:600}
+.addon-qty{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--navy);margin-top:10px}
+.addon-qty-hint{font-size:10.5px;color:var(--muted)}
+.handle-std{font-size:12px;color:var(--navy);margin-bottom:9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.handle-std select{flex:1;min-width:150px;padding:7px 8px;border:1.5px solid var(--border);border-radius:8px;background:var(--cream);font-family:inherit;font-size:12.5px;color:var(--navy)}
+.handle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.handle-card{border:1.5px solid var(--border);border-radius:10px;background:white;padding:6px 5px 7px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.handle-card img{width:100%;aspect-ratio:1;object-fit:contain}
+.handle-card.sel{border-color:var(--gold);background:var(--gold-bg);box-shadow:0 0 0 1.5px var(--gold)}
+.handle-card.is-std{cursor:default;background:var(--cream-d)}
+.h-id{font-size:10.5px;font-weight:600;color:var(--navy);word-break:break-all;line-height:1.2}
+.h-desc{font-size:9.5px;color:var(--muted);line-height:1.2}
+.h-tag{font-size:10.5px;padding:1px 7px;border-radius:9px;background:var(--cream-d);color:var(--muted);margin-top:2px}
+.h-tag.up{background:var(--navy);color:white;font-weight:600}
+.h-tag.std{background:var(--gold);color:var(--navy);font-weight:700}
+.frame-card{border:1.5px solid var(--border);border-radius:10px;padding:10px 11px;margin-top:9px;background:var(--cream)}
+.frame-hd{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;color:var(--navy);margin-bottom:7px}
+.frame-del{border:none;background:none;color:#b3261e;font-size:11.5px;cursor:pointer;font-family:inherit}
+.frame-dims{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}
+.frame-dims label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px}
+.frame-dims input{background:white;padding:9px 11px}
+.frame-opts{display:flex;justify-content:space-between;align-items:center;margin-top:9px}
+.frame-res{font-size:12px;color:var(--navy);margin-top:9px;padding-top:8px;border-top:1px dashed var(--border);line-height:1.6}
+.frame-add{width:100%;margin-top:9px;padding:9px;border:1.5px dashed var(--border);border-radius:10px;background:none;color:var(--navy);font-family:inherit;font-size:12.5px;cursor:pointer}
+#pbViewer{position:fixed;inset:0;z-index:9998;background:#3a3a3a;flex-direction:column}
+.pb-bar{display:flex;gap:8px;align-items:center;padding:9px 10px;background:var(--navy)}
+.pb-bar button{border:none;border-radius:8px;background:rgba(255,255,255,.14);color:white;font-family:inherit;font-size:12.5px;padding:8px 10px;cursor:pointer;white-space:nowrap}
+.pb-bar select{flex:1;min-width:0;padding:8px;border-radius:8px;border:none;font-family:inherit;font-size:13px;background:white;color:var(--navy)}
+.pb-scroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;--pbw:100%}
+.pb-page{width:var(--pbw);max-width:none;margin:0 auto 8px}
+.pb-page img{width:100%;height:auto;display:block;background:white}
+@media(min-width:900px){.pb-scroll{--pbw:860px}}
+.height-display.pending{color:var(--muted);font-weight:400;font-size:13px}
+/* ── Toggles ── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--cream-d)}
+.toggle-row:last-child{border-bottom:none}
+.tl-main{font-size:14px;font-weight:500;color:var(--navy)}
+.tl-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.switch{position:relative;width:46px;height:26px;flex-shrink:0;margin-left:12px}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:var(--border);border-radius:13px;transition:.22s;cursor:pointer}
+.slider::before{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;background:white;border-radius:50%;transition:.22s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.switch input:checked+.slider{background:var(--gold)}
+.switch input:checked+.slider::before{transform:translateX(20px)}
+.threshold-info{background:#f0f7e8;border-left:3px solid var(--success);padding:9px 12px;border-radius:0 7px 7px 0;margin-top:10px;font-size:12.5px;color:#1a5c1a;line-height:1.6}
+/* ── Discount ── */
+.discount-row{display:flex;align-items:center;gap:8px}
+.discount-row input{flex:1;text-align:center;font-size:20px;font-weight:700;color:var(--navy);padding:11px}
+.discount-label{font-size:14px;color:var(--muted);white-space:nowrap}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.preset-btn{padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;background:var(--cream);cursor:pointer;color:var(--navy);font-family:inherit}
+.preset-btn.active{background:var(--navy);border-color:var(--navy);color:white}
+.film-types{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:0 0 11px;border-bottom:1px solid var(--cream-d)}
+.film-btn{padding:8px 4px;border:1.5px solid var(--border);border-radius:9px;background:var(--cream);cursor:pointer;color:var(--navy);font-family:inherit;font-size:13px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:1px}
+.film-btn small{font-size:10.5px;font-weight:400;color:var(--muted)}
+.film-btn.active{border-color:var(--gold);background:var(--gold-bg)}
+.film-types.off .film-btn.active{border-color:var(--border);background:var(--cream)}
+.dealer-btn{width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 12px;margin-bottom:12px;border:1.5px solid var(--gold);border-radius:10px;background:white;cursor:pointer;font-family:inherit;color:var(--navy)}
+.dealer-main{font-size:15px;font-weight:700}
+.dealer-sub{font-size:10.5px;color:var(--muted)}
+.dealer-btn.active{background:var(--navy);border-color:var(--navy);color:white}
+.dealer-btn.active .dealer-sub{color:rgba(255,255,255,.75)}
+.dealer-btn.active .dealer-main::before{content:"✓ "}
+/* ── Detail toggle ── */
+.detail-toggle{font-size:12px;color:var(--gold);cursor:pointer;text-align:right;padding-top:8px;margin-top:4px}
+.detail-wrap{display:none;margin-top:8px}
+.detail-wrap.open{display:block}
+.detail-row{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.75)}
+.detail-row.disc{color:var(--gold-l);font-weight:500}
+.detail-row.nd{color:rgba(255,255,255,.5);font-size:11.5px}
+.price-total-row{display:flex;justify-content:space-between;align-items:center;margin-top:11px;padding-top:11px;border-top:1px solid rgba(201,168,76,.4)}
+.price-total-label{font-family:'Noto Serif TC',serif;font-size:14px;color:var(--gold);letter-spacing:1px}
+.price-total-amount{font-size:26px;font-weight:700;color:var(--gold-l)}
+.price-summary{background:var(--navy);border-radius:14px;padding:16px 15px;color:white;margin-bottom:11px;box-shadow:0 4px 20px rgba(26,39,68,.15)}
+.price-title{font-family:'Noto Serif TC',serif;font-size:11px;color:rgba(255,255,255,.45);letter-spacing:3px;margin-bottom:6px;text-align:center}
+.price-empty{text-align:center;color:rgba(255,255,255,.3);font-size:13px;padding:6px 0}
+.notes-box{font-size:11px;color:var(--muted);padding:9px 12px;background:var(--cream-d);border-radius:9px;line-height:1.7;margin-top:3px;margin-bottom:4px}
+/* ── Bath tab ── */
+.bath-note{font-size:11px;color:var(--muted);background:var(--cream-d);border-radius:7px;padding:7px 10px;margin-bottom:10px;line-height:1.6}
+.bath-grid{display:flex;flex-direction:column;gap:6px}
+.bath-item{display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border:1.5px solid var(--border);border-radius:10px;background:var(--cream);cursor:pointer;transition:border-color .15s,background .15s}
+.bath-item.selected{border-color:var(--gold);background:var(--gold-bg)}
+.bath-acc-hdr{cursor:pointer;user-select:none}
+.bath-acc-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.bath-acc-badge{font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.15);color:white;white-space:nowrap}
+.bath-acc-badge.on{background:var(--gold);color:var(--navy);font-weight:700}
+.bath-acc-arrow{font-size:14px;transition:transform .2s;display:inline-block}
+.bath-collapsed .bath-acc-arrow{transform:rotate(-90deg)}
+.bath-collapsed .section-body{display:none}
+#bathLightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px}
+#bathLightbox img{width:100%;max-width:400px;border-radius:12px;background:white}
+.bath-lb-title{color:white;font-size:14px;font-weight:600;text-align:center}
+.bath-lb-hint{color:rgba(255,255,255,.6);font-size:11px}
+.bath-item-photo{width:88px;height:88px;cursor:zoom-in;object-fit:contain;border-radius:7px;flex-shrink:0;background:white;border:1px solid var(--cream-d)}
+.bath-item-cb{width:20px;height:20px;border:2px solid var(--border);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s;background:white;margin-top:2px}
+.bath-item.selected .bath-item-cb{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.bath-item-info{flex:1;min-width:0}
+.bath-item-name{font-size:12.5px;font-weight:500;color:var(--navy);line-height:1.3}
+.bath-item-model{font-size:10.5px;color:var(--muted);margin-top:1px}
+.bath-item-installfee{font-size:10px;color:var(--muted);margin-top:1px}
+.bath-item-price{font-size:13px;font-weight:700;color:var(--navy);font-family:'Noto Serif TC',serif;flex-shrink:0;white-space:nowrap}
+.bath-qty-row{display:flex;align-items:center;gap:7px;margin-top:7px;padding-top:7px;border-top:1px solid var(--cream-d)}
+.bath-qty-btn{width:28px;height:28px;border:1.5px solid var(--border);border-radius:7px;background:white;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--navy)}
+.bath-qty-num{font-size:14px;font-weight:600;color:var(--navy);min-width:24px;text-align:center}
+.bath-removal-row{margin-top:7px;padding-top:7px;border-top:1px solid var(--cream-d);display:flex;flex-direction:column;gap:4px}
+.bath-removal-cb{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--navy);cursor:pointer}
+.bath-removal-cb input{width:15px;height:15px;cursor:pointer;accent-color:var(--gold)}
+.bath-sum-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--cream-d);color:var(--text)}
+.bath-sum-row:last-child{border-bottom:none}
+.bath-sum-total{display:flex;justify-content:space-between;font-size:16px;font-weight:700;color:var(--navy);padding-top:10px;margin-top:4px;border-top:2px solid var(--navy)}
+.bath-clear-btn{background:none;border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit;margin-top:10px;width:100%}
+/* ── Toast ── */
+.toast{position:fixed;bottom:calc(80px + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:rgba(26,39,68,.92);color:white;padding:9px 20px;border-radius:20px;font-size:13px;white-space:nowrap;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* ── Modal / Bottom sheet ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:white;width:100%;max-width:430px;border-radius:18px 18px 0 0;padding:16px 16px calc(20px + var(--safe-bottom));max-height:85vh;overflow-y:auto;animation:slideUp .25s ease-out}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.modal-title{font-family:'Noto Serif TC',serif;font-size:16px;color:var(--navy)}
+.modal-close{background:none;border:none;font-size:21px;cursor:pointer;color:var(--muted);line-height:1;padding:0}
+.mf{margin-bottom:12px}
+.mf label{margin-bottom:4px;font-weight:500;color:var(--navy);font-size:13px}
+select{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:15px;font-family:inherit;background:var(--cream);color:var(--text);appearance:none;-webkit-appearance:none;outline:none}
+select:focus{border-color:var(--gold)}
+.btn-save{width:100%;background:var(--navy);color:white;border:none;border-radius:10px;padding:13px;font-size:15px;font-family:inherit;cursor:pointer;margin-top:8px}
+/* ── Price edit mode ── */
+.price-edit-panel{background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(26,39,68,.07)}
+.pe-header{background:var(--gold);color:var(--navy);padding:12px 15px;display:flex;align-items:center;justify-content:space-between}
+.pe-title{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:700}
+.pe-hint{font-size:10.5px;opacity:.7}
+.pe-product{border-bottom:1px solid var(--cream-d)}
+.pe-product:last-child{border-bottom:none}
+.pe-pname{background:var(--navy);color:var(--gold-l);font-size:12px;font-weight:500;padding:8px 14px;letter-spacing:.5px}
+.pe-table{padding:4px 0}
+.pe-row{display:flex;align-items:center;padding:7px 14px;gap:8px;cursor:pointer;transition:background .12s}
+.pe-row:active{background:var(--cream)}
+.pe-label{flex:1;font-size:12.5px;color:var(--text);line-height:1.4}
+.pe-price{font-size:14px;font-weight:600;color:var(--navy);flex-shrink:0}
+.pe-price.edited{color:var(--red)}
+.pe-edit-icon{color:var(--border);font-size:14px;flex-shrink:0}
+/* price input modal */
+.price-input-wrap{display:flex;align-items:center;gap:8px;margin-top:6px}
+.price-input-wrap span{font-size:18px;color:var(--muted)}
+.price-input-wrap input{flex:1;padding:12px;border:2px solid var(--gold);border-radius:9px;font-size:20px;font-weight:700;color:var(--navy);text-align:center;font-family:inherit;outline:none;background:var(--cream)}
+.reset-link{font-size:12px;color:var(--muted);text-align:right;margin-top:6px;cursor:pointer;text-decoration:underline}
+.reset-all-btn{width:100%;background:none;border:1.5px solid var(--border);border-radius:9px;padding:11px;font-size:13px;color:var(--muted);font-family:inherit;cursor:pointer;margin-top:4px}
+.reset-all-btn:active{background:var(--cream-d)}
+.edit-mode-banner{background:var(--gold-bg);border:1.5px solid var(--gold);border-radius:9px;padding:9px 12px;font-size:12px;color:#8a6a00;margin-bottom:10px;text-align:center}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="status-bar"></div>
+  <div class="header">
+    <div class="header-row">
+      <div class="header-logo">itai 一太e衛浴</div>
+      <div class="header-sub">報價計算器 2026</div>
+    </div>
+    <div class="header-right">
+      <button class="hbtn" id="btnCalc" onclick="switchTab('calc')">📋 拉門</button>
+      <button class="hbtn" id="btnBath" onclick="switchTab('bath')">🛁 衛浴</button>
+      <button class="hbtn" id="btnPDF" onclick="openPricebook()">📄 牌價本</button>
+    </div>
+  </div>
+
+  <div id="mainScroll">
+    <!-- ══════ TAB: 報價 ══════ -->
+    <div id="tabCalc">
+
+    <!-- STEP 1 -->
+    <div class="section">
+      <div class="section-hdr"><div class="snum">1</div><div class="stitle">選擇款式</div></div>
+      <div class="section-body">
+        <div class="edit-hint">長按卡片可調整安裝費設定 ✎</div>
+        <div class="product-grid" id="productGrid"></div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="section" id="specSection" style="display:none">
+      <div class="section-hdr"><div class="snum">2</div><div class="stitle">選擇規格</div></div>
+      <div class="section-body" id="specBody"></div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="section" id="sizeSection" style="display:none">
+      <div class="section-hdr"><div class="snum">3</div><div class="stitle">輸入尺寸（計算貼膜、玻璃加價）</div></div>
+      <div class="section-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="form-group">
+            <label id="widthLabel">寬度（cm）</label>
+            <input type="number" id="width" placeholder="例：120" min="1" inputmode="numeric" oninput="thresholdSizeOverride=null;renderThresholdDetail();refreshAddonNotes();calculate()">
+          </div>
+          <div class="form-group">
+            <label>高度（cm）</label>
+            <input type="number" id="heightInput" placeholder="請先選擇規格" min="1" inputmode="numeric" disabled oninput="onHeightInput()">
+          </div>
+        </div>
+        <div class="height-hint" id="heightHint"></div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="section" id="optSection" style="display:none">
+      <div class="section-hdr"><div class="snum">4</div><div class="stitle">加購選項</div></div>
+      <div class="section-body">
+        <div class="toggle-row" style="border-bottom:none">
+          <div class="tl">
+            <div class="tl-main">防爆貼膜</div>
+            <div class="tl-sub" id="filmLabel">請先輸入寬度</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="filmToggle" onchange="calculate()"><span class="slider"></span></label>
+        </div>
+        <div class="film-types" id="filmTypes">
+          <button class="film-btn active" data-film="matte" onclick="setFilmType('matte')">霧面<small id="filmRateMatte">$100/才</small></button>
+          <button class="film-btn" data-film="clear" onclick="setFilmType('clear')">透明<small id="filmRateClear">$100/才</small></button>
+          <button class="film-btn" data-film="hair" onclick="setFilmType('hair')">髮絲膜<small id="filmRateHair">$200/才</small></button>
+        </div>
+        <div class="toggle-row" id="thresholdRow">
+          <div class="tl">
+            <div class="tl-main">門檻安裝</div>
+            <div class="tl-sub" id="thresholdSub">依型式自動判定，費用不打折</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="thresholdToggle" onchange="onThresholdToggle()"><span class="slider"></span></label>
+        </div>
+        <div id="thresholdDetail" style="display:none"></div>
+        <!-- 擋水鋁條：只有皇冠系列才顯示 -->
+        <div class="toggle-row" id="stripRow" style="display:none">
+          <div class="tl">
+            <div class="tl-main">擋水鋁條</div>
+            <div class="tl-sub">附表三 配件，不打折</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="stripToggle" onchange="onStripToggle()"><span class="slider"></span></label>
+        </div>
+        <div id="stripDetail" style="display:none;padding-top:10px">
+          <div class="form-group">
+            <label>顏色</label>
+            <div class="step-row" id="stripColorRow">
+              <button class="chip" data-val="P" onclick="selectStrip('color','P')">白金 P</button>
+              <button class="chip" data-val="J" onclick="selectStrip('color','J')">霧銀 J</button>
+              <button class="chip" data-val="B" onclick="selectStrip('color','B')">黑色 B</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>長度</label>
+            <div class="step-row" id="stripSizeRow">
+              <button class="chip" data-val="100" onclick="selectStrip('size','100')">100cm以內</button>
+              <button class="chip" data-val="210" onclick="selectStrip('size','210')">101-210cm</button>
+              <button class="chip" data-val="310" onclick="selectStrip('size','310')">211-310cm</button>
+            </div>
+          </div>
+          <div id="stripPriceNote" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
+        </div>
+        <!-- 把手更換／加購（附表二） -->
+        <div class="toggle-row" id="handleRow">
+          <div class="tl">
+            <div class="tl-main">把手更換／加購</div>
+            <div class="tl-sub" id="handleSub">標配把手換款補差價</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="handleToggle" onchange="onAddonToggle()"><span class="slider"></span></label>
+        </div>
+        <div id="handleDetail" class="addon-detail" style="display:none"></div>
+        <!-- 玻璃更換（附表二 備註2） -->
+        <div class="toggle-row" id="glassRow" style="display:none">
+          <div class="tl">
+            <div class="tl-main">玻璃更換</div>
+            <div class="tl-sub" id="glassSub">依每才加價</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="glassToggle" onchange="onAddonToggle()"><span class="slider"></span></label>
+        </div>
+        <div id="glassDetail" class="addon-detail" style="display:none"></div>
+        <!-- 固定框（附表一） -->
+        <div class="toggle-row" id="frameRow" style="display:none">
+          <div class="tl">
+            <div class="tl-main">固定框</div>
+            <div class="tl-sub">高度超過牌價預設的部分，輸入寬高自動查附表一</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="frameToggle" onchange="onAddonToggle()"><span class="slider"></span></label>
+        </div>
+        <div id="frameDetail" class="addon-detail" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="section" id="discountSection" style="display:none">
+      <div class="section-hdr"><div class="snum">5</div><div class="stitle">折扣設定（牌價、玻璃加價、固定框）</div></div>
+      <div class="section-body">
+        <button class="dealer-btn" id="dealerBtn" onclick="toggleDealer()">
+          <span class="dealer-main">經銷價</span>
+          <span class="dealer-sub">牌價 6 折｜防爆膜 霧面・透明 $70/才、髮絲膜 $170/才</span>
+        </button>
+        <label>折數（輸入 85 代表 85 折）</label>
+        <div class="discount-row">
+          <input type="number" id="discount" value="100" min="1" max="100" inputmode="numeric" oninput="onDiscountInput()">
+          <span class="discount-label">折</span>
+        </div>
+        <div class="presets">
+          <button class="preset-btn active" onclick="setDiscount(100)">不打折</button>
+          <button class="preset-btn" onclick="setDiscount(95)">95折</button>
+          <button class="preset-btn" onclick="setDiscount(90)">9折</button>
+          <button class="preset-btn" onclick="setDiscount(88)">88折</button>
+          <button class="preset-btn" onclick="setDiscount(85)">85折</button>
+          <button class="preset-btn" onclick="setDiscount(80)">8折</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="price-summary" id="summaryBox" style="display:none">
+      <div class="price-title">報 價 明 細</div>
+      <div id="priceDetails"></div>
+      <div class="detail-toggle" onclick="toggleDetail()">▼ 展開明細</div>
+      <div class="detail-wrap" id="detailWrap"></div>
+    </div>
+
+    <div class="notes-box">⚠ 本報價為初步估算，實際費用以現場丈量為準。<br>防爆貼膜：寬(m)×高(m)×10.89=才數，霧面／透明每才 $100、髮絲膜每才 $200，不打折（經銷價 $70／$170）。<br>L型／轉角型／五角型：寬度請輸入各面相加的總寬（例 100×100 輸入 200）。<br>丈量費 $500/樘（不打折）。無電梯每層加 $100。<br>折扣適用：牌價、玻璃加價、固定框。把手差價、防爆膜、門檻、安裝費、丈量費不打折。</div>
+    </div><!-- /tabCalc -->
+
+    <!-- ══════ TAB: 衛浴設備 ══════ -->
+    <div id="tabBath" style="display:none">
+      <div class="section">
+        <div class="section-hdr"><div class="snum">🛁</div><div class="stitle">衛浴配件系列</div></div>
+        <div class="section-body">
+          <div class="bath-note">每組安裝費 $500（不打折）｜未達 $3,000 外加運費 $150</div>
+          <div id="bathAccessGrid" class="bath-grid"></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-hdr"><div class="snum">🚿</div><div class="stitle">花灑系列</div></div>
+        <div class="section-body">
+          <div class="bath-note">安裝費每組 $2,000（不打折）｜若需加壓馬達另計</div>
+          <div id="bathShowerGrid" class="bath-grid"></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-hdr"><div class="snum">🚽</div><div class="stitle">省水馬桶系列</div></div>
+        <div class="section-body">
+          <div class="bath-note">安裝費每組 $2,500｜拆除舊馬桶 $800｜清運費 $1,800（不打折）</div>
+          <div id="bathToiletGrid" class="bath-grid"></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-hdr"><div class="snum">🚽</div><div class="stitle">智慧型馬桶</div></div>
+        <div class="section-body">
+          <div class="bath-note">安裝費每組 $3,500｜拆除舊馬桶 $800｜清運費 $1,800（不打折）</div>
+          <div id="bathSmartToiletGrid" class="bath-grid"></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-hdr"><div class="snum">🚽</div><div class="stitle">電腦馬桶座系列</div></div>
+        <div class="section-body">
+          <div class="bath-note">安裝費每組 $1,500（不打折）</div>
+          <div id="bathBidetGrid" class="bath-grid"></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-hdr"><div class="snum">🚰</div><div class="stitle">龍頭／蓮蓬頭／沖洗器系列</div></div>
+        <div class="section-body">
+          <div class="bath-note">安裝費每組 $1,100（不打折）｜未達 $3,000 外加運費 $150</div>
+          <div id="bathFaucetGrid" class="bath-grid"></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-hdr"><div class="snum">♿</div><div class="stitle">輔具系列</div></div>
+        <div class="section-body">
+          <div class="bath-note">安裝費依商品不同（$1,000～$3,500）｜未達 $3,000 外加運費 $150</div>
+          <div id="bathAssistGrid" class="bath-grid"></div>
+        </div>
+      </div>
+      <div class="section" id="bathSummarySection" style="display:none">
+        <div class="section-hdr"><div class="snum">$</div><div class="stitle">衛浴設備報價小計</div></div>
+        <div class="section-body" id="bathSummaryBody"></div>
+      </div>
+      <div class="notes-box">⚠ 衛浴設備報價為初步估算，實際費用以現場確認為準。<br>各系列安裝費不打折。運費、吊車費等另計。</div>
+    </div><!-- /tabBath -->
+
+    <!-- ══════ TAB: 牌價設定 ══════ -->
+    <div id="tabPrice" style="display:none">
+      <div class="edit-mode-banner">📑 牌價一覽 — 依牌價本 VERSION 202604，僅供查看，不可修改</div>
+      <div class="price-edit-panel" id="priceEditPanel"></div>
+    </div>
+  </div><!-- /mainScroll -->
+
+  <div class="quote-bar" id="quoteBar">
+    <div class="quote-bar-inner">
+      <div class="qb-price-wrap">
+        <div class="qb-lbl">合計估價</div>
+        <div class="qb-amount pending" id="qbAmount">請先選擇款式</div>
+      </div>
+      <button class="btn-copy" onclick="copyQuote()">📋 複製報價單</button>
+    </div>
+  </div>
+</div><!-- /app -->
+
+<!-- INSTALL MODAL -->
+<div class="modal-overlay" id="editModal" onclick="closeMBg(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <div class="modal-title" id="modalTitle">安裝費設定</div>
+      <button class="modal-close" onclick="closeM()">✕</button>
+    </div>
+    <input type="hidden" id="editingId">
+    <div class="mf"><label>安裝費方式</label>
+      <select id="editInstallType" onchange="toggleInstallFeeField()">
+        <option value="included">已含於牌價</option>
+        <option value="extra">另計安裝費</option>
+      </select>
+    </div>
+    <div class="mf" id="installFeeWrap" style="display:none">
+      <label>安裝費金額（元，不打折）</label>
+      <input type="number" id="editInstallFee" min="0" inputmode="numeric">
+    </div>
+    <div class="mf">
+      <label>丈量費（元，0=免丈量費）</label>
+      <input type="number" id="editSurveyFee" min="0" inputmode="numeric">
+    </div>
+    <button class="btn-save" onclick="saveM()">儲存</button>
+  </div>
+</div>
+
+<!-- PRICE EDIT MODAL -->
+<div class="modal-overlay" id="priceModal" onclick="closePriceMBg(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <div class="modal-title" id="pModalTitle">修改牌價</div>
+      <button class="modal-close" onclick="closePriceM()">✕</button>
+    </div>
+    <div class="mf">
+      <label id="pModalLabel">規格說明</label>
+      <div class="price-input-wrap">
+        <span>$</span>
+        <input type="number" id="pModalInput" min="0" inputmode="numeric">
+      </div>
+    </div>
+    <div class="reset-link" id="pModalResetLink" onclick="resetThisPrice()" style="display:none">恢復原始牌價</div>
+    <button class="btn-save" onclick="savePriceM()">儲存</button>
+  </div>
+</div>
+
+<div id="pbViewer" style="display:none">
+  <div class="pb-bar">
+    <button onclick="closePricebook()">✕ 關閉</button>
+    <select id="pbJump" onchange="pbGo(this.value)"></select>
+    <button id="pbZoomBtn" onclick="pbZoom()">🔍 放大</button>
+  </div>
+  <div class="pb-scroll" id="pbScroll"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================================================================
+// 產品資料
+// 每個款式的 variants 一筆＝牌價本的一格表格：path 是各步驟選項、h 是高度、
+// shape 是門檻型式、sizes 是 [尺寸, 牌價]
+// =====================================================================
+// 型式代碼（決定門檻型式）：I=一字型  L=L型／轉角  W=五角型  R=圓弧型
+// 資料來源：牌價本 VERSION 202604（2026-04-01 生效）
+const W120_180=['寬120cm以內','寬121-150cm','寬151-180cm'];
+const W120_170=['寬120cm以內','寬121-150cm','寬151-170cm'];
+const W150_210=['寬150cm以內','寬151-180cm','寬181-210cm'];
+const W150_200=['寬150cm以內','寬151-180cm','寬181-200cm'];
+const W180_240=['寬180cm以內','寬181-210cm','寬211-240cm'];
+const C100_120=['100×100cm以內','120×120cm以內'];
+function zip(labels,prices){ return labels.map((l,i)=>[l,prices[i]]); }
+function V(path,h,shape,sizes,extra){
+  return Object.assign({path,h,shape,sizes:sizes.map(([label,price])=>({label,price}))},extra||{});
+}
+// 依售價加成（黑色加二成等）產生另一組牌價
+function scaleVariants(vs,mult){
+  return vs.map(v=>Object.assign({},v,{sizes:v.sizes.map(s=>({label:s.label,price:Math.round(s.price*mult)}))}));
+}
+
+// 皇冠5248 鋁合金（p.07）
+const V5248AL=[
+  V(['一字單開+固定面','無緩衝'],200,'I',[['寬150cm以內',20800],['寬151-180cm',22400]]),
+  V(['一字單開+固定面','單緩衝'],200,'I',[['寬150cm以內',21600],['寬151-180cm',23200]]),
+  V(['一字單開+固定面','雙緩衝'],200,'I',[['寬150cm以內',22400],['寬151-180cm',24000]]),
+  V(['一字單開+左右固定面','無緩衝'],200,'I',[['寬180cm以內',22900],['寬181-210cm',25700]]),
+  V(['一字單開+左右固定面','單緩衝'],200,'I',[['寬180cm以內',23700],['寬181-210cm',26500]]),
+  V(['一字單開+左右固定面','雙緩衝'],200,'I',[['寬180cm以內',24500],['寬181-210cm',27300]]),
+  V(['一字四門','無緩衝'],200,'I',[['寬200cm以內',29900],['寬201-240cm',32700]]),
+  V(['一字四門','單緩衝'],200,'I',[['寬200cm以內',30700],['寬201-240cm',33500]]),
+  V(['L型單開+轉角固定面','無緩衝'],200,'L',[['寬180cm以內',23100],['寬181-210cm',25500]]),
+  V(['L型單開+轉角固定面','單緩衝'],200,'L',[['寬180cm以內',23900],['寬181-210cm',26300]]),
+  V(['L型單開+轉角固定面','雙緩衝'],200,'L',[['寬180cm以內',24700],['寬181-210cm',27100]]),
+  V(['二門轉角','無緩衝'],200,'L',[['100×100cm',29800],['120×120cm',33300]]),
+  V(['二門轉角','單緩衝'],200,'L',[['100×100cm',30600],['120×120cm',34100]]),
+];
+// 皇冠無邊框 5024／5026／5100（p.08）
+const V5024=[
+  V(['單開門'],200,'I',[['80×200cm以內',15000]]),
+  V(['單開門+固定面'],200,'I',zip(W120_180,[20900,22100,23300])),
+  V(['單開門+左右固定面'],200,'I',zip(W150_200,[26500,27700,28900])),
+  V(['90度轉角型（單開+雙固）'],200,'L',zip(C100_120,[29300,32100])),
+  V(['五角型（單開+雙固）'],200,'W',zip(C100_120,[30200,33000])),
+];
+// 皇冠無邊框 5300／5700（p.08，兩系列同一張牌價表）
+function v5300(){ return [
+  V(['單開門'],200,'I',[['80×200cm以內',16600]]),
+  V(['單開門+固定面'],200,'I',zip(W120_180,[22400,23600,24800])),
+  V(['單開門+左右固定面'],200,'I',zip(W150_200,[29500,30700,31900])),
+  V(['90度轉角型（單開+雙固）'],200,'L',zip(C100_120,[32300,35100])),
+  V(['五角型（單開+雙固）'],200,'W',zip(C100_120,[33200,36000])),
+]; }
+
+const PRODUCTS = [
+  // ── 金冠 2001（p.01）牌價本僅列一字三門 EB130 ─────────────
+  { id:'j2001', name:'有框式淋浴拉門\n金冠2001', img:'imgs/j2001.jpg',
+    installType:'extra', installFee:2100, surveyFee:500,
+    stepLabels:['材質','高度'], sizeLabel:'寬度',
+    variants:[
+      V(['PS板 3mm','缸上型（高150cm）'],150,'I',zip(W120_180,[10600,11600,12600])),
+      V(['PS板 3mm','標準型（高190cm）'],190,'I',zip(W120_180,[12000,13000,14000])),
+      V(['透明強玻 4mm','缸上型（高150cm）'],150,'I',zip(W120_170,[11000,12000,13000])),
+      V(['透明強玻 4mm','標準型（高190cm）'],190,'I',zip(W120_170,[12400,13700,15000])),
+    ],
+    note:'一字三門 EB130，純白色。高度超過190cm的部分以固定框製作（固定框另計）。基本安裝費2,100元；含固定框2,700元，每個固定框另加600元。'
+  },
+
+  // ── 金冠 4000（p.01）──────────────────────────────────
+  { id:'j4000', name:'有框式淋浴拉門\n金冠4000', img:'imgs/j4000.jpg',
+    installType:'extra', installFee:2100, surveyFee:500,
+    stepLabels:['材質','型式','高度'], sizeLabel:'寬度 / 尺寸',
+    colors:[{label:'純白',mult:1},{label:'霧銀（加一成）',short:'霧銀',mult:1.1}],
+    variants:[
+      V(['PS板 3mm','一字二門 GA120/GB120','缸上型（高150cm）'],150,'I',[['寬120cm以內',11100],['寬121-150cm',13000]]),
+      V(['PS板 3mm','一字二門 GA120/GB120','標準型（高190cm）'],190,'I',[['寬120cm以內',12300],['寬121-150cm',14300]]),
+      V(['PS板 3mm','一字三門 GA130/GB130','缸上型（高150cm）'],150,'I',zip(W120_180,[11700,13500,15300])),
+      V(['PS板 3mm','一字三門 GA130/GB130','標準型（高190cm）'],190,'I',zip(W120_180,[12700,14300,15900])),
+      V(['PS板 3mm','二門轉角 GA220','標準型（高190cm）'],190,'L',zip(C100_120,[18700,21200]),{installFee:2700}),
+      V(['PS板 3mm','一字四門 GA140','標準型（高190cm）'],190,'I',[['寬200cm以內',18700],['寬201-240cm',21200]],{installFee:2700}),
+      V(['PS板 3mm','三門轉角 GA330','標準型（高190cm）'],190,'L',[['100×100cm以內',20000]],{installFee:2700}),
+      V(['透明強玻 4mm','一字二門 GA120/GB120','缸上型（高150cm）'],150,'I',[['寬120cm以內',11500]]),
+      V(['透明強玻 4mm','一字二門 GA120/GB120','標準型（高190cm）'],190,'I',[['寬120cm以內',13000]]),
+      V(['透明強玻 4mm','一字三門 GA130/GB130','缸上型（高150cm）'],150,'I',zip(W120_170,[12000,13500,15000])),
+      V(['透明強玻 4mm','一字三門 GA130/GB130','標準型（高190cm）'],190,'I',zip(W120_170,[13800,15300,16800])),
+      V(['透明強玻 4mm','二門轉角 GA220','標準型（高190cm）'],190,'L',[['100×100cm以內',20100]],{installFee:2700}),
+      V(['透明強玻 4mm','一字四門 GA140','標準型（高190cm）'],190,'I',[['寬200cm以內',20100]],{installFee:2700}),
+      V(['透明強玻 4mm','三門轉角 GA330','標準型（高190cm）'],190,'L',[['90×90cm以內',20200]],{installFee:2700}),
+    ],
+    note:'霧銀色鋁框依售價再加一成。一字二門／三門基本安裝費2,100元（含固定框2,700元）；一字四門／轉角型2,700元（含固定框3,300元），每個固定框另加600元。高度超過190cm的部分以固定框製作。'
+  },
+
+  // ── 金冠 5000（p.02）──────────────────────────────────
+  { id:'j5000', name:'雙開連動淋浴拉門\n金冠5000', img:'imgs/j5000.jpg',
+    installType:'extra', installFee:2100, surveyFee:500,
+    stepLabels:['材質'], sizeLabel:'寬度',
+    variants:[
+      V(['PS板 3mm'],190,'I',zip(W120_170,[14600,16600,18600])),
+      V(['透明強玻 4mm'],190,'I',zip(W120_170,[15400,17400,19400])),
+    ],
+    note:'一字三門 JA-130／JB-130，純白色，高度190cm。基本安裝費2,100元；含固定框2,700元，每個固定框另加600元。'
+  },
+
+  // ── 金冠 6000（p.02）──────────────────────────────────
+  { id:'j6000', name:'三門連動淋浴拉門\n金冠6000', img:'imgs/j5000.jpg',
+    installType:'extra', installFee:2300, surveyFee:500,
+    stepLabels:[], sizeLabel:'寬度',
+    variants:[ V([],190,'I',zip(W120_180,[16800,18300,19800])) ],
+    note:'連動門 D-130，霧銀色，透明強玻6mm，高度190cm。基本安裝費2,300元；含固定框2,900元。'
+  },
+
+  // ── 金冠 6001（p.02）──────────────────────────────────
+  { id:'j6001', name:'無障礙淋浴拉門\n金冠6001', img:'imgs/j6001.jpg',
+    installType:'extra', installFee:3700, surveyFee:500,
+    stepLabels:[], sizeLabel:'寬度',
+    variants:[ V([],200,'I',zip(W120_180,[16800,17800,18800])) ],
+    note:'連動門 DA-130，霧銀色，透明強玻6mm，高度200cm。基本安裝費3,700元；含固定框4,300元。尺寸超過上表另行報價。'
+  },
+
+  // ── 金冠 7000（p.03）──────────────────────────────────
+  { id:'j7000', name:'三門雙開連動\n金冠7000', img:'imgs/j5000.jpg',
+    installType:'extra', installFee:2300, surveyFee:500,
+    stepLabels:[], sizeLabel:'寬度',
+    variants:[ V([],190,'I',zip(W120_170,[25000,26900,28800])) ],
+    note:'連動門 V-130，霧銀色，透明強玻6mm，高度190cm。門檻搭配限定696型。基本安裝費2,300元；含固定框2,900元。'
+  },
+
+  // ── 皇冠 5028（p.04）──────────────────────────────────
+  { id:'h5028', name:'兩移門淋浴拉門\n皇冠5028', img:'imgs/h5028.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:[], sizeLabel:'寬度',
+    variants:[ V([],190,'I',[['寬150cm以內',27300],['寬151-180cm',30000]]) ],
+    note:'一字型，霧銀色，透明強玻8mm。寬度限180cm以內、高度限190cm以內。牌價含基本安裝。'
+  },
+
+  // ── 皇冠 5038（p.04）──────────────────────────────────
+  { id:'h5038', name:'懸吊門淋浴拉門\n皇冠5038', img:'imgs/h5028.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度',
+    variants:[
+      V(['單開門+固定面'],210,'I',zip(W150_210,[27000,29800,32600])),
+      V(['雙開門+左右固定面（一字四門）'],210,'I',zip(W180_240,[41000,43700,46400])),
+    ],
+    note:'高度210cm，透明強玻10mm。牌價含基本安裝。尺寸超過上表另行報價。'
+  },
+
+  // ── 皇冠 5048（p.05）一字四門與二門轉角共用牌價：100×100→寬200cm以內、120×120→201-240cm ──
+  { id:'h5048', name:'鋁合金橫拉門\n皇冠5048', img:'imgs/h5048.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度 / 尺寸',
+    variants:[
+      V(['單開型+固定面'],200,'I',[['寬150cm以內',18800],['寬151-180cm',21000]]),
+      V(['單開+雙固定面'],200,'I',zip(W180_240,[21800,24200,26600])),
+      V(['二門轉角'],200,'L',zip(C100_120,[26800,30000])),
+      V(['一字四門'],200,'I',[['寬200cm以內',26800],['寬201-240cm',30000]]),
+    ],
+    note:'高度200cm，霧銀色，透明強玻8mm。牌價含基本安裝。尺寸超過上表另行報價。'
+  },
+
+  // ── 皇冠 5058（p.05）──────────────────────────────────
+  { id:'h5058', name:'不鏽鋼橫拉門\n皇冠5058', img:'imgs/h5058.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度 / 尺寸',
+    variants:[
+      V(['單開門+固定面'],210,'I',zip(W150_210,[23400,26100,28800])),
+      V(['單開+雙固定面'],210,'I',zip(W180_240,[27400,30400,33400])),
+      V(['雙開門+左右固定面（一字四門）'],210,'I',zip(W180_240,[33700,36200,38700])),
+      V(['二門轉角'],210,'L',zip(C100_120,[35300,38800])),
+    ],
+    note:'高度210cm，透明強玻8mm。牌價含基本安裝。尺寸超過上表另行報價。'
+  },
+
+  // ── 皇冠 5248 鋁合金（p.07）────────────────────────────
+  { id:'h5248al', name:'緩衝橫拉門（鋁合金）\n皇冠5248', img:'imgs/h5248.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式','緩衝'], sizeLabel:'寬度 / 尺寸',
+    variants:V5248AL,
+    note:'高度200cm，霧銀色，透明強玻8mm。黑色請選「皇冠5248B」（依售價加二成）。牌價含基本安裝。'
+  },
+
+  // ── 皇冠 5248 不鏽鋼（p.07）牌價本未列 L型、二門轉角 ────────
+  { id:'h5248ss', name:'緩衝橫拉門（不鏽鋼）\n皇冠5248', img:'imgs/h5248.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式','緩衝'], sizeLabel:'寬度',
+    variants:[
+      V(['一字單開+固定面','無緩衝'],200,'I',[['寬150cm以內',24000],['寬151-180cm',26000]]),
+      V(['一字單開+固定面','單緩衝'],200,'I',[['寬150cm以內',24800],['寬151-180cm',26800]]),
+      V(['一字單開+固定面','雙緩衝'],200,'I',[['寬150cm以內',25600],['寬151-180cm',27600]]),
+      V(['一字單開+左右固定面','無緩衝'],200,'I',[['寬180cm以內',27300],['寬181-210cm',30300]]),
+      V(['一字單開+左右固定面','單緩衝'],200,'I',[['寬180cm以內',28100],['寬181-210cm',31100]]),
+      V(['一字單開+左右固定面','雙緩衝'],200,'I',[['寬180cm以內',28900],['寬181-210cm',31900]]),
+      V(['一字四門','無緩衝'],200,'I',[['寬200cm以內',34900],['寬201-240cm',37900]]),
+      V(['一字四門','單緩衝'],200,'I',[['寬200cm以內',35700],['寬201-240cm',38700]]),
+    ],
+    note:'高度200cm，透明強玻8mm。牌價本不鏽鋼款未列L型及二門轉角。牌價含基本安裝。'
+  },
+
+  // ── 皇冠 5248B 黑色＝鋁合金牌價 ×1.2（p.07 備註）───────────
+  { id:'h5248b', name:'黑色緩衝橫拉門\n皇冠5248B', img:'imgs/h5800b.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式','緩衝'], sizeLabel:'寬度 / 尺寸',
+    variants:scaleVariants(V5248AL,1.2),
+    note:'同5248鋁合金，黑色依售價加二成（顯示價已含加成）。高度200cm。牌價含基本安裝。'
+  },
+
+  // ── 皇冠 5488（p.06）──────────────────────────────────
+  { id:'h5488', name:'不鏽鋼雙開橫拉門\n皇冠5488', img:'imgs/h5248.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:[], sizeLabel:'寬度',
+    variants:[ V([],200,'I',[['寬125-200cm',38200]]) ],
+    note:'一字型，透明強玻8mm。寬度限125-200cm、高度限200cm以內。牌價含基本安裝。'
+  },
+
+  // ── 皇冠 5024（p.08）──────────────────────────────────
+  { id:'h5024', name:'無邊框不鏽鋼\n皇冠5024', img:'imgs/h5024ti.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度 / 尺寸',
+    variants:V5024,
+    note:'5024／5026／5100系列，高度200cm，透明強玻8mm。牌價含基本安裝。尺寸超過上表另行報價。'
+  },
+
+  // ── 皇冠 5024 鍍鈦（p.09）──────────────────────────────
+  { id:'h5024ti', name:'鍍鈦無邊框不鏽鋼\n皇冠5024鍍鈦', img:'imgs/h5024ti.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度 / 尺寸',
+    variants:[
+      V(['單開門'],200,'I',[['80×200cm以內',21300]]),
+      V(['單開門+固定面'],200,'I',zip(W120_180,[35300,36500,37700])),
+      V(['單開門+左右固定面'],200,'I',zip(W150_200,[45600,46800,48000])),
+      V(['90度轉角型（單開+雙固）'],200,'L',zip(C100_120,[51400,54400])),
+      V(['五角型（單開+雙固）'],200,'W',zip(C100_120,[51100,54100])),
+    ],
+    note:'5024／5100鈦加工系列，高度200cm。把手ET-624B-S換T型把手ET-639-S加1,800元（未計入）。牌價含基本安裝。'
+  },
+
+  // ── 皇冠 5024B 黑色＝5024牌價 ×1.2（p.08 備註）────────────
+  { id:'h5024b', name:'霧面黑不鏽鋼\n皇冠5024B', img:'imgs/h5800b.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度 / 尺寸',
+    variants:scaleVariants(V5024,1.2),
+    note:'同5024，黑色依售價加二成（顯示價已含加成）。高度200cm。牌價含基本安裝。'
+  },
+
+  // ── 皇冠 5300（p.08）──────────────────────────────────
+  { id:'h5300', name:'銅鍍鉻無邊框\n皇冠5300', img:'imgs/h5300.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度 / 尺寸',
+    variants:v5300(),
+    note:'高度200cm，透明強玻8mm。牌價含基本安裝。尺寸超過上表另行報價。'
+  },
+
+  // ── 皇冠 5588（p.12）──────────────────────────────────
+  { id:'h5588', name:'側移門無邊框\n皇冠5588', img:'imgs/h5588.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'尺寸',
+    variants:[
+      V(['90度轉角型'],200,'L',[['90×90cm以內',34400],['120×120cm以內',38700]]),
+      V(['五角型'],200,'W',[['120×120cm以內',36900]]),
+    ],
+    note:'黑色／槍灰色，透明強玻8mm，高度固定200cm。門片及固定面有尺寸限制，請見牌價本。牌價含基本安裝。'
+  },
+
+  // ── 皇冠 5700（p.08，與5300同一張牌價表）─────────────────
+  { id:'h5700', name:'銅鍍鉻無邊框\n皇冠5700', img:'imgs/h5700.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度 / 尺寸',
+    variants:v5300(),
+    note:'高度200cm，透明強玻8mm。牌價含基本安裝。尺寸超過上表另行報價。'
+  },
+
+  // ── 皇冠 5800（p.10）──────────────────────────────────
+  { id:'h5800', name:'不鏽鋼無邊框\n皇冠5800', img:'imgs/h5800.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度 / 尺寸',
+    variants:[
+      V(['單開門'],200,'I',[['80×200cm以內',16600]]),
+      V(['單開門+固定面'],200,'I',zip(W120_180,[23700,24900,26100])),
+      V(['單開門+左右固定面'],200,'I',zip(W150_200,[32300,33500,34700])),
+      V(['L型（單開+雙固）'],200,'L',zip(C100_120,[35000,37800])),
+      V(['五角型（單開+雙固）'],200,'W',zip(C100_120,[36000,38800])),
+    ],
+    note:'高度200cm，透明強玻8mm，不鏽鋼鉸鍊及固定夾。牌價含基本安裝，不含人造石門檻。'
+  },
+
+  // ── 皇冠 5800B（p.10）─────────────────────────────────
+  { id:'h5800b', name:'曜石黑無邊框\n皇冠5800B', img:'imgs/h5800b.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度 / 尺寸',
+    variants:[
+      V(['單開門'],200,'I',[['80×200cm以內',17300]]),
+      V(['單開門+固定面'],200,'I',zip(W120_180,[25500,26900,28300])),
+      V(['單開門+左右固定面'],200,'I',zip(W150_200,[34800,36200,37600])),
+      V(['L型（單開+雙固）'],200,'L',zip(C100_120,[38100,41200])),
+      V(['五角型（單開+雙固）'],200,'W',zip(C100_120,[38200,41300])),
+    ],
+    note:'高度200cm，透明強玻8mm，表面電泳塗裝處理。牌價含基本安裝，不含人造石門檻。'
+  },
+
+  // ── 皇冠 5900（p.11）──────────────────────────────────
+  { id:'h5900', name:'內外雙開無邊框\n皇冠5900', img:'imgs/h5900.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度 / 尺寸',
+    variants:[
+      V(['單開門'],200,'I',[['80×200cm以內',18400]]),
+      V(['單開門+固定面'],200,'I',zip(W120_180,[24300,25400,26500])),
+      V(['單開門+左右固定面'],200,'I',zip(W150_200,[30200,31300,32400])),
+      V(['L型（單開+雙固）'],200,'L',zip(C100_120,[32800,35400])),
+      V(['五角型（單開+雙固）'],200,'W',zip(C100_120,[35600,38200])),
+    ],
+    note:'高度200cm，透明強玻8mm，內外開鉸鍊。牌價含基本安裝。'
+  },
+
+  // ── 皇冠 6800（p.11）──────────────────────────────────
+  { id:'h6800', name:'摺疊淋浴拉門\n皇冠6800', img:'imgs/h6800.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['型式'], sizeLabel:'寬度',
+    variants:[
+      V(['摺疊門'],200,'I',[['寬100cm以內',24500]]),
+      V(['摺疊門+固定面'],200,'I',[['寬150cm以內',29000],['寬151-200cm',31500]]),
+    ],
+    note:'高度200cm，霧銀色，透明強玻8mm。牌價含基本安裝。'
+  },
+
+  // ── 皇冠 5198（p.06）──────────────────────────────────
+  { id:'h5198', name:'油壓鉸鍊無邊框\n皇冠5198', img:'imgs/h5198.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['玻璃厚度','型式'], sizeLabel:'寬度 / 尺寸',
+    variants:[
+      V(['8mm','單開門'],200,'I',[['80×200cm以內',22100]]),
+      V(['8mm','單開門+固定面'],200,'I',zip(W120_180,[27400,28600,29800])),
+      V(['8mm','90度轉角型（單開+雙固）'],200,'L',zip(C100_120,[36300,39200])),
+      V(['10mm','單開門'],200,'I',[['80×200cm以內',25200]]),
+      V(['10mm','單開門+固定面'],200,'I',zip(W120_180,[31400,33000,34600])),
+      V(['10mm','90度轉角型（單開+雙固）'],200,'L',zip(C100_120,[41600,45100])),
+    ],
+    note:'高度200cm，限定玻對牆鉸鍊。牌價含基本安裝。'
+  },
+
+  // ── 皇冠 8000（p.12）──────────────────────────────────
+  { id:'h8000', name:'槍灰細框無邊框\n皇冠8000', img:'imgs/h8000.jpg',
+    installType:'included', installFee:0, surveyFee:500,
+    stepLabels:['玻璃厚度','型式'], sizeLabel:'寬度 / 尺寸',
+    variants:[
+      V(['8mm','單開門+固定面'],210,'I',zip(W120_180,[35600,37200,38800])),
+      V(['8mm','單開門+左右固定面'],210,'I',zip(W150_200,[37300,38900,40500])),
+      V(['8mm','90度轉角型'],210,'L',zip(C100_120,[43900,46900])),
+      V(['8mm','五角型'],210,'W',zip(C100_120,[48300,51300])),
+      V(['10mm','單開門+固定面'],210,'I',zip(W120_180,[38000,40000,42000])),
+      V(['10mm','單開門+左右固定面'],210,'I',zip(W150_200,[40200,42200,44200])),
+      V(['10mm','90度轉角型'],210,'L',zip(C100_120,[47400,51000])),
+      V(['10mm','五角型'],210,'W',zip(C100_120,[51800,55400])),
+    ],
+    note:'槍灰色，高度上限210cm，限定玻對玻鉸鍊，鉸鍊承重固定面寬度至少15cm。牌價含基本安裝。'
+  },
+
+  // ── 金龍 6000（p.03）──────────────────────────────────
+  { id:'jinlong6000', name:'圓弧型淋浴門\n金龍6000', img:'imgs/jinlong6000.jpg',
+    installType:'extra', installFee:2500, surveyFee:500,
+    stepLabels:[], sizeLabel:'尺寸',
+    variants:[ V([],185,'R',[['圓弧型 90-116cm',20400]]) ],
+    note:'圓弧型 SG-03，光鉻色，透明強玻6mm，高度185cm。基本安裝費2,500元；含固定框2,900元。'
+  },
+
+  // ── 桂冠 3000（p.03）──────────────────────────────────
+  { id:'guiguan3000', name:'日式橫拉門\n桂冠3000', img:'imgs/guiguan3000.jpg',
+    installType:'extra', installFee:2300, surveyFee:500,
+    stepLabels:['材質'], sizeLabel:'百葉型式（90×210cm以內）',
+    variants:[
+      V(['砂膜強玻 5mm'],210,'I',[['C-1 無百葉／C-2 44cm百葉／C-3 88cm百葉',17800],['C-4 全百葉',18500]]),
+      V(['白色壓克力板 5mm'],210,'I',[['C-1 無百葉／C-2 44cm百葉／C-3 88cm百葉',20200],['C-4 全百葉',18500]]),
+    ],
+    note:'純白色，90×210cm以內，尺寸超過另行報價。基本安裝費2,300元。'
+  },
+
+  // ── 海龍 2000（p.04）──────────────────────────────────
+  { id:'hailong2000', name:'摺疊淋浴拉門\n海龍2000', img:'imgs/hailong2000.jpg',
+    installType:'extra', installFee:2100, surveyFee:500,
+    stepLabels:['材質'], sizeLabel:'寬度',
+    variants:[
+      V(['PS板 3mm'],190,'I',[['60-80cm',9200],['81-90cm',9800]]),
+      V(['透明強玻 4mm'],190,'I',[['60-80cm',9800]]),
+    ],
+    note:'折門 H-100，純白色。高度超過190cm的部分以固定框製作。基本安裝費2,100元，每個固定框另加600元。'
+  },
+];
+
+// =====================================================================
+// State
+// =====================================================================
+let overrides = {};      // install fee overrides
+let priceOverrides = {}; // price overrides: {productId: {pathKey: newPrice}}
+let selectedId = null;
+let stepSel = [];      // 各步驟選到的文字
+let sizeSel = null;    // 尺寸索引
+let colorSel = 0;      // 顏色索引（有顏色加成的款式才用）
+const WIDTH_LABEL_CORNER = '玻璃總寬（各面相加，cm）';
+let detailOpen = false;
+let currentTab = 'calc';
+
+// 擋水鋁條 state
+let stripColor = null; // 'P','J','B'
+let stripSize = null;  // '100','210','310'
+// 門檻手動選擇覆蓋
+let thresholdSizeOverride = null;
+// price table: [color][size] = price
+const STRIP_PRICES = {
+  P:{100:250, 210:400, 310:null},  // 白金P（310未列）
+  J:{100:150, 210:250, 310:350},   // 霧銀J
+  B:{100:160, 210:280, 310:400},   // 黑色B
+};
+
+// =====================================================================
+// 門檻 (Threshold) price tables — 附表一《人造大理石門檻》
+// =====================================================================
+// YB-01 圓弧型
+const THRESH_YUANHU = [{size:'90×90cm以內',price:1500},{size:'100×100cm以內',price:1900},{size:'117×117cm以內',price:2200}];
+// YB-02 一字型
+const THRESH_YIZI = [{size:'180cm以內',price:1200},{size:'181-200cm',price:1400}];
+// YB-03 L型
+const THRESH_L = [{size:'100×100cm以內',price:1500},{size:'120×120cm以內',price:1900}];
+// YB-04 五角型
+const THRESH_WUJIAO = [{size:'90×90cm以內',price:1500},{size:'100×100cm以內',price:1800},{size:'120×120cm以內',price:2200}];
+const THRESH_INSTALL = 600; // 安裝費，不打折
+
+// =====================================================================
+// 衛浴設備資料
+// =====================================================================
+const BATH_CATEGORIES = [
+  {
+    id: 'accessory',
+    gridId: 'bathAccessGrid',
+    installFee: 500,
+    items: [
+      // 單桿毛巾架
+      {id:'Z-D-11001', name:'單桿毛巾架', model:'Z-D-11001', price:1200},
+      {id:'Z-D-15001', name:'單桿毛巾架', model:'Z-D-15001', price:1100},
+      {id:'Z-P-41MB',  name:'單桿毛巾架(黑)', model:'Z-P-41MB', price:2200},
+      {id:'Z-22001MB', name:'單桿毛巾架(黑)', model:'Z-22001MB', price:1600},
+      // 雙桿毛巾架
+      {id:'Z-D-11008', name:'雙桿毛巾架', model:'Z-D-11008', price:1600},
+      {id:'Z-D-15008', name:'雙桿毛巾架', model:'Z-D-15008', price:1300},
+      {id:'Z-22008MB', name:'雙桿毛巾架(黑)', model:'Z-22008MB', price:2000},
+      // 雙層置衣架
+      {id:'Z-D-11010', name:'雙層置衣架', model:'Z-D-11010', price:3100},
+      {id:'Z-D-15010', name:'雙層置衣架', model:'Z-D-15010', price:2100},
+      {id:'Z-P-412MB', name:'雙層置衣架(黑)', model:'Z-P-412MB', price:6100},
+      {id:'Z-22010MB', name:'雙層置衣架(黑)', model:'Z-22010MB', price:3800},
+      // 多功能安全扶手
+      {id:'Z-D-135',   name:'多功能安全扶手', model:'Z-D-135', price:5600},
+      // 毛巾環
+      {id:'Z-D-11002', name:'毛巾環', model:'Z-D-11002', price:1000},
+      {id:'Z-22002MB', name:'毛巾環(黑)', model:'Z-22002MB', price:1600},
+      // 衛生紙架
+      {id:'Z-D-11003', name:'衛生紙架', model:'Z-D-11003', price:1300},
+      {id:'Z-D-15003', name:'衛生紙架', model:'Z-D-15003', price:1300},
+      {id:'Z-D-12751', name:'衛生紙架', model:'Z-D-12751', price:1900},
+      {id:'Z-D-12752', name:'衛生紙架', model:'Z-D-12752', price:2100},
+      {id:'Z-D-415',   name:'衛生紙架', model:'Z-D-415', price:2800},
+      {id:'Z-D-416',   name:'衛生紙架', model:'Z-D-416', price:2000},
+      {id:'Z-22003MB', name:'衛生紙架(黑)', model:'Z-22003MB', price:1200},
+      // 置物架
+      {id:'Z-D-2627',  name:'置物架', model:'Z-D-2627', price:3200},
+      {id:'Z-D-410',   name:'置物架', model:'Z-D-410', price:1600},
+      {id:'Z-D-411',   name:'置物架', model:'Z-D-411', price:1600},
+      {id:'Z-D-412',   name:'置物架', model:'Z-D-412', price:4600},
+      {id:'Z-D-468',   name:'置物架', model:'Z-D-468', price:1900},
+      {id:'Z-D-467',   name:'置物架', model:'Z-D-467', price:1900},
+      // 衣帽鉤
+      {id:'Z-D-11006', name:'衣帽鉤', model:'Z-D-11006', price:700},
+      {id:'Z-D-15006', name:'衣帽鉤', model:'Z-D-15006', price:800},
+      {id:'Z-22006MB', name:'衣帽鉤(黑)', model:'Z-22006MB', price:1000},
+      // 漱口杯架
+      {id:'Z-D-11005', name:'漱口杯架', model:'Z-D-11005', price:800},
+      {id:'Z-D-15005', name:'漱口杯架', model:'Z-D-15005', price:900},
+      {id:'Z-22005MB', name:'漱口杯架(黑)', model:'Z-22005MB', price:1000},
+      // 香皂碟架
+      {id:'Z-D-11004', name:'香皂碟架', model:'Z-D-11004', price:800},
+      {id:'Z-D-11015', name:'香皂碟架', model:'Z-D-11015', price:1100},
+      {id:'Z-D-15004', name:'香皂碟架', model:'Z-D-15004', price:900},
+      {id:'Z-22004MB', name:'香皂碟架(黑)', model:'Z-22004MB', price:1000},
+      // 馬桶刷架
+      {id:'Z-D-11009', name:'馬桶刷架', model:'Z-D-11009', price:1300},
+      {id:'Z-D-15009', name:'馬桶刷架', model:'Z-D-15009', price:1300},
+      {id:'Z-22009MB', name:'馬桶刷架(黑)', model:'Z-22009MB', price:1600},
+    ]
+  },
+  {
+    id: 'shower',
+    gridId: 'bathShowerGrid',
+    installFee: 2000,
+    items: [
+      {id:'ET-SL-333',      name:'花灑組', model:'ET-SL-333', price:15500, note:'80-140cm'},
+      {id:'Z-109598',       name:'花灑組', model:'Z-109598', price:16600, note:'120-145cm'},
+      {id:'ET-BF65496BGS',  name:'花灑組', model:'ET-BF65496BGS', price:5700, note:'75-120cm'},
+    ]
+  },
+  {
+    id: 'toilet',
+    gridId: 'bathToiletGrid',
+    installFee: 2500,
+    items: [
+      {id:'ET-7006A', name:'省水馬桶', model:'ET-7006A-30/40', price:8200, note:'70.5×40.5×69cm'},
+      {id:'ET-7007A', name:'省水馬桶', model:'ET-7007A-30/40', price:7700, note:'68.5×36.5×71.5cm'},
+      {id:'ET-7008A', name:'省水馬桶', model:'ET-7008A-40', price:8300, note:'69.5×39×70cm'},
+      {id:'ET-7009A', name:'省水馬桶', model:'ET-7009A-30', price:10300, note:'70.5×40.5×67cm'},
+      {id:'ET-7010A', name:'省水馬桶', model:'ET-7010A-30/40', price:9900, note:'71×38.5×72cm'},
+    ]
+  },
+  {
+    id: 'smarttoilet',
+    gridId: 'bathSmartToiletGrid',
+    installFee: 3500,
+    items: [
+      {id:'ET-FDA2105', name:'智慧型馬桶', model:'ET-FDA2105-30/40', price:32000, note:'69.1×42.6×47.6cm'},
+    ]
+  },
+  {
+    id: 'bidet',
+    gridId: 'bathBidetGrid',
+    installFee: 1500,
+    items: [
+      {id:'ET-FDB878',  name:'瞬熱式電腦馬桶座(溫風型)', model:'ET-FDB878', price:9900},
+      {id:'ET-FDB6110', name:'瞬熱式電腦馬桶座(基本款)', model:'ET-FDB6110', price:8800},
+      {id:'ET-FDB6160', name:'瞬熱式電腦馬桶座(遙控款)', model:'ET-FDB6160', price:11400},
+      {id:'HG204D',     name:'免插電馬桶座', model:'HG204D', price:2000},
+      {id:'HG206V',     name:'免插電馬桶座', model:'HG206V', price:2000},
+    ]
+  },
+  {
+    id: 'faucet',
+    gridId: 'bathFaucetGrid',
+    installFee: 1100,
+    items: [
+      // 面盆龍頭
+      {id:'ET-TD-685',    name:'面盆龍頭', model:'ET-TD-685', price:3300, note:'15cm'},
+      {id:'Z-D-9088',     name:'面盆龍頭', model:'Z-D-9088', price:5700, note:'15cm'},
+      {id:'ET-D-9788',    name:'面盆龍頭', model:'ET-D-9788', price:4000, note:'15cm'},
+      // 淋浴龍頭
+      {id:'ET-SD-606',    name:'淋浴龍頭', model:'ET-SD-606', price:3300},
+      // 高級滑桿
+      {id:'Z-D-115',      name:'高級滑桿', model:'Z-D-115', price:1300, note:'69cm'},
+      {id:'Z-D-118',      name:'高級滑桿', model:'Z-D-118', price:1600, note:'65.8cm'},
+      {id:'Z-TAP-518212', name:'高級滑桿', model:'Z-TAP-518212', price:1800, note:'66cm'},
+      {id:'Z-D-212',      name:'高級滑桿', model:'Z-D-212', price:1600, note:'65.8cm'},
+      // 蓮蓬頭
+      {id:'Z-H-88',       name:'蓮蓬頭', model:'Z-H-88', price:1600},
+      // 沖洗器
+      {id:'Z-WP-900',     name:'沖洗器', model:'Z-WP-900', price:1500},
+      {id:'Z-WP-1100',    name:'沖洗器', model:'Z-WP-1100', price:1300},
+      {id:'Z-WP-1400',    name:'沖洗器', model:'Z-WP-1400', price:2400},
+      {id:'Z-TAP-535008', name:'沖洗器', model:'Z-TAP-535008', price:1200},
+    ]
+  },
+  {
+    id: 'assist',
+    gridId: 'bathAssistGrid',
+    installFee: 1000,
+    items: [
+      // 安全扶手
+      {id:'ET-GB100-50',    name:'安全扶手', model:'ET-GB100-50', price:2000},
+      {id:'ET-SB100-70',    name:'安全扶手', model:'ET-SB100-70', price:8500},
+      {id:'ET-GB400-40x60', name:'安全扶手', model:'ET-GB400-40x60', price:3600},
+      {id:'ET-GB500-40x60', name:'安全扶手', model:'ET-GB500-40x60', price:3700},
+      // 百變扶手
+      {id:'ET-AD-A0001',    name:'百變扶手(標準段)', model:'ET-AD-A0001', price:700},
+      {id:'ET-AD-A0001L',   name:'百變扶手(加長段)', model:'ET-AD-A0001L', price:700},
+      // 上翻安全扶手
+      {id:'ET-8925-75',     name:'上翻安全扶手', model:'ET-8925-75', price:3800},
+      {id:'ET-8917G-75',    name:'上翻安全扶手(豪華版)', model:'ET-8917G-75', price:4800},
+      // 馬桶安全扶手
+      {id:'ET-AD-A0003W',   name:'馬桶安全扶手(不銹鋼)', model:'ET-AD-A0003W', price:7200},
+      {id:'ET-AD-A0002',    name:'鋁合金活動扶手', model:'ET-AD-A0002', price:12000},
+      // 淋浴椅
+      {id:'ET-8889',        name:'上翻淋浴椅', model:'ET-8889', price:3000, installFeeOverride:1000},
+      {id:'ET-SB007Q',      name:'折疊淋浴椅', model:'ET-SB007Q', price:9000, installFeeOverride:1000},
+      {id:'ET-AD-B0003',    name:'淋浴椅', model:'ET-AD-B0003', price:2000, installFeeOverride:1000},
+      {id:'ET-AD-B0004',    name:'便盆淋浴兩用椅', model:'ET-AD-B0004', price:4000, installFeeOverride:1000},
+      {id:'ET-AD-B0001',    name:'可調節淋浴椅(含椅背)', model:'ET-AD-B0001', price:12000, installFeeOverride:1500},
+      // 特殊輔具
+      {id:'ET-AD-B0002',    name:'馬桶輔助升降椅', model:'ET-AD-B0002', price:68500, installFeeOverride:1500},
+      {id:'ET-AD-C0001',    name:'電動升降洗手台', model:'ET-AD-C0001', price:148000, installFeeOverride:3500},
+      {id:'ET-CB0506',      name:'養護浴座', model:'ET-CB0506', price:38000, installFeeOverride:3000},
+    ]
+  },
+];
+
+// bathCart: { itemId: {qty, price, name, model, catId} }
+let bathCart = {};
+let bathDiscount = 100; // 衛浴設備固定不打折（安裝費不折），牌價部分先保持100
+// toiletRemoval: { itemId: {removeOld: bool, haul: bool} }
+let toiletRemoval = {};
+
+const TOILET_CATS = ['toilet','smarttoilet'];
+const BATH_PHOTOS = new Set(['ET-7006A', 'ET-7007A', 'ET-7008A', 'ET-7009A', 'ET-7010A', 'ET-BF65496BGS', 'ET-D-9788', 'ET-FDA2105', 'ET-FDB6110', 'ET-FDB6160', 'ET-FDB878', 'ET-SD-606', 'ET-SL-333', 'ET-TD-685', 'Z-109598', 'Z-22001MB', 'Z-22002MB', 'Z-22003MB', 'Z-22004MB', 'Z-22005MB', 'Z-22006MB', 'Z-22008MB', 'Z-22009MB', 'Z-22010MB', 'Z-D-11001', 'Z-D-11002', 'Z-D-11003', 'Z-D-11004', 'Z-D-11005', 'Z-D-11006', 'Z-D-11008', 'Z-D-11009', 'Z-D-11010', 'Z-D-11015', 'Z-D-115', 'Z-D-118', 'Z-D-12751', 'Z-D-12752', 'Z-D-135', 'Z-D-15001', 'Z-D-15003', 'Z-D-15004', 'Z-D-15005', 'Z-D-15006', 'Z-D-15008', 'Z-D-15009', 'Z-D-15010', 'Z-D-212', 'Z-D-2627', 'Z-D-410', 'Z-D-411', 'Z-D-412', 'Z-D-415', 'Z-D-416', 'Z-D-467', 'Z-D-468', 'Z-D-9088', 'Z-H-88', 'Z-P-412MB', 'Z-P-41MB', 'Z-TAP-518212', 'Z-TAP-535008', 'Z-WP-1100', 'Z-WP-1400', 'Z-WP-900']);
+const bathOpen = {}; // catId -> 是否展開（預設全部折疊）
+
+function bathZoom(id, title, e){
+  e.stopPropagation();
+  let lb = document.getElementById('bathLightbox');
+  if(!lb){
+    lb = document.createElement('div');
+    lb.id = 'bathLightbox';
+    lb.addEventListener('click', ()=>{ lb.style.display='none'; });
+    document.body.appendChild(lb);
+  }
+  lb.innerHTML = `<img src="bath_imgs/${id}.jpg" alt=""><div class="bath-lb-title">${title}</div><div class="bath-lb-hint">點任意處關閉</div>`;
+  lb.style.display = 'flex';
+}
+
+function renderBathTab(){
+  BATH_CATEGORIES.forEach(cat=>{
+    const grid = document.getElementById(cat.gridId);
+    if(!grid) return;
+    grid.innerHTML = '';
+    const sec = grid.closest('.section');
+    const hdr = sec.querySelector('.section-hdr');
+    if(!hdr.dataset.acc){
+      hdr.dataset.acc = '1';
+      hdr.classList.add('bath-acc-hdr');
+      hdr.insertAdjacentHTML('beforeend','<span class="bath-acc-right"><span class="bath-acc-badge"></span><span class="bath-acc-arrow">▾</span></span>');
+      hdr.addEventListener('click', ()=>{
+        bathOpen[cat.id] = !bathOpen[cat.id];
+        sec.classList.toggle('bath-collapsed', !bathOpen[cat.id]);
+      });
+    }
+    sec.classList.toggle('bath-collapsed', !bathOpen[cat.id]);
+    const selCount = Object.values(bathCart).filter(v=>v.catId===cat.id).reduce((a,v)=>a+v.qty,0);
+    const badge = hdr.querySelector('.bath-acc-badge');
+    badge.textContent = selCount ? `已選 ${selCount}` : `${cat.items.length} 款`;
+    badge.classList.toggle('on', selCount>0);
+    const isToiletCat = TOILET_CATS.includes(cat.id);
+    cat.items.forEach(item=>{
+      const inCart = bathCart[item.id];
+      const qty = inCart ? inCart.qty : 0;
+      const tr = toiletRemoval[item.id] || {};
+      const hasPhoto = BATH_PHOTOS.has(item.id);
+      const photoHtml = hasPhoto ? `<img src="bath_imgs/${item.id}.jpg" class="bath-item-photo" alt="${item.model}" loading="lazy" onclick="bathZoom('${item.id}','${item.name} ${item.model}',event)" onerror="this.style.display='none'">` : '';
+      const removalHtml = (isToiletCat && qty>0) ? `
+        <div class="bath-removal-row" onclick="event.stopPropagation()">
+          <label class="bath-removal-cb"><input type="checkbox" ${tr.removeOld?'checked':''} onchange="bathSetRemoval('${item.id}','removeOld',this.checked)"> 拆除舊馬桶 $800/組</label>
+          <label class="bath-removal-cb"><input type="checkbox" ${tr.haul?'checked':''} onchange="bathSetRemoval('${item.id}','haul',this.checked)"> 清運費 $1,800/組</label>
+        </div>` : '';
+      const installFee = item.installFeeOverride !== undefined ? item.installFeeOverride : cat.installFee;
+      const div = document.createElement('div');
+      div.className = 'bath-item' + (qty>0?' selected':'');
+      div.innerHTML = `
+        ${photoHtml}
+        <div class="bath-item-cb">${qty>0?'✓':''}</div>
+        <div class="bath-item-info">
+          <div class="bath-item-name">${item.name}</div>
+          <div class="bath-item-model">${item.model}${item.note?' · '+item.note:''}</div>
+          <div class="bath-item-installfee">安裝費 ${fmt(installFee)}/組</div>
+          ${qty>0?`<div class="bath-qty-row">
+            <button class="bath-qty-btn" onclick="bathQty('${item.id}','${cat.id}',-1,event)">－</button>
+            <span class="bath-qty-num">${qty}</span>
+            <button class="bath-qty-btn" onclick="bathQty('${item.id}','${cat.id}',1,event)">＋</button>
+          </div>`:''}
+          ${removalHtml}
+        </div>
+        <div class="bath-item-price">${fmt(item.price)}</div>`;
+      div.addEventListener('click', ()=>bathToggle(item.id, cat.id, item));
+      grid.appendChild(div);
+    });
+  });
+  renderBathSummary();
+}
+
+function bathToggle(itemId, catId, item){
+  if(bathCart[itemId]){
+    delete bathCart[itemId];
+    delete toiletRemoval[itemId];
+  } else {
+    bathCart[itemId] = {qty:1, price:item.price, name:item.name, model:item.model, catId:catId, installFeeOverride:item.installFeeOverride};
+  }
+  renderBathTab();
+}
+
+function bathQty(itemId, catId, delta, e){
+  e.stopPropagation();
+  if(!bathCart[itemId]) return;
+  bathCart[itemId].qty += delta;
+  if(bathCart[itemId].qty <= 0){ delete bathCart[itemId]; delete toiletRemoval[itemId]; }
+  renderBathTab();
+}
+
+function bathSetRemoval(itemId, field, val){
+  if(!toiletRemoval[itemId]) toiletRemoval[itemId] = {};
+  toiletRemoval[itemId][field] = val;
+  renderBathSummary();
+}
+
+function renderBathSummary(){
+  const sec = document.getElementById('bathSummarySection');
+  const body = document.getElementById('bathSummaryBody');
+  if(!Object.keys(bathCart).length){ sec.style.display='none'; return; }
+  sec.style.display = 'block';
+  let html = '';
+  let grandTotal = 0;
+
+  BATH_CATEGORIES.forEach(cat=>{
+    const catItems = Object.entries(bathCart).filter(([id,v])=>v.catId===cat.id);
+    if(!catItems.length) return;
+    const isToiletCat = TOILET_CATS.includes(cat.id);
+    let catProductTotal = 0;
+    let installFeeTotal = 0;
+    let removalFee = 0;
+    let haulFee = 0;
+    catItems.forEach(([id,v])=>{
+      catProductTotal += v.price * v.qty;
+      const fee = v.installFeeOverride !== undefined ? v.installFeeOverride : cat.installFee;
+      installFeeTotal += fee * v.qty;
+      if(isToiletCat && toiletRemoval[id]){
+        if(toiletRemoval[id].removeOld) removalFee += 800 * v.qty;
+        if(toiletRemoval[id].haul) haulFee += 1800 * v.qty;
+      }
+    });
+    const catTotal = catProductTotal + installFeeTotal + removalFee + haulFee;
+    catItems.forEach(([id,v])=>{
+      html += `<div class="bath-sum-row"><span>${v.name} ${v.model} ×${v.qty}</span><span>${fmt(v.price*v.qty)}</span></div>`;
+    });
+    html += `<div class="bath-sum-row"><span>安裝費</span><span>${fmt(installFeeTotal)}</span></div>`;
+    if(removalFee) html += `<div class="bath-sum-row"><span>拆除舊馬桶</span><span>${fmt(removalFee)}</span></div>`;
+    if(haulFee) html += `<div class="bath-sum-row"><span>清運費</span><span>${fmt(haulFee)}</span></div>`;
+    grandTotal += catTotal;
+  });
+
+  html += `<div class="bath-sum-total"><span>合計估價</span><span>${fmt(grandTotal)}</span></div>`;
+  html += `<button class="bath-clear-btn" onclick="bathClearAll()">🗑 清除全部選擇</button>`;
+  body.innerHTML = html;
+}
+
+function bathClearAll(){
+  bathCart = {};
+  toiletRemoval = {};
+  renderBathTab();
+}
+
+// 門檻型式由目前選到的規格決定（每個規格都標了 I／L／W／R）
+function getThresholdShape(){
+  if(!selectedId) return null;
+  const v=currentVariant(getP(selectedId));
+  return v?v.shape:null;
+}
+
+// 依型式＋尺寸自動選門檻規格
+// returns {shape, shapeName, table, sizeIdx, stonePrice, installPrice, total, autoSize, hint} | null
+function getThresholdInfo(){
+  const shape=getThresholdShape();
+  if(!shape) return null;
+  let table, shapeName;
+  if(shape==='I'){ table=THRESH_YIZI; shapeName='一字型 YB-02'; }
+  else if(shape==='L'){ table=THRESH_L; shapeName='L型 YB-03'; }
+  else if(shape==='R'){ table=THRESH_YUANHU; shapeName='圓弧型 YB-01'; }
+  else if(shape==='W'){ table=THRESH_WUJIAO; shapeName='五角型 YB-04'; }
+  else return null;
+
+  const w=parseFloat(document.getElementById('width').value)||0;
+  const item=getCurrentPriceItem();
+  let sizeIdx=null, hint='';
+  if(shape==='I'){
+    if(w>200) hint='門檻牌價只列到200cm，超過請另行報價（或手動點選）';
+    else if(w>0) sizeIdx = w<=180 ? 0 : 1;
+    else hint='★ 輸入拉門寬度後自動選擇門檻尺寸';
+  } else if(shape==='R'){
+    if(w>117) hint='圓弧型門檻牌價只列到117×117cm，請另行報價';
+    else if(w>0) sizeIdx = w<=90 ? 0 : w<=100 ? 1 : 2;
+    else hint='★ 輸入寬度後自動選擇門檻尺寸';
+  } else {
+    // L型／五角型：依所選的拉門尺寸（例 100×100）判定，不看寬度欄
+    const mm=item ? item.size.label.match(/(\d+)\s*[×xX]\s*(\d+)/) : null;
+    if(mm){
+      const n=Math.max(+mm[1],+mm[2]);
+      if(shape==='L') sizeIdx = n<=100 ? 0 : n<=120 ? 1 : null;
+      else sizeIdx = n<=90 ? 0 : n<=100 ? 1 : n<=120 ? 2 : null;
+    } else if(item){
+      hint='此規格無法自動判定，請點選門檻尺寸';
+    } else {
+      hint='★ 選好拉門尺寸後自動選擇門檻尺寸';
+    }
+  }
+  const autoSize = sizeIdx!=null ? table[sizeIdx] : null;
+  const stonePrice = autoSize ? autoSize.price : null;
+  const total = stonePrice ? stonePrice + THRESH_INSTALL : null;
+  return {shape, shapeName, table, sizeIdx, stonePrice, installPrice:THRESH_INSTALL, total, autoSize, hint};
+}
+
+// Price edit modal state
+let pEditContext = null; // {id, path, origPrice}
+
+function loadData(){
+  try{ const s=localStorage.getItem('itai_ov3'); if(s) overrides=JSON.parse(s); }catch(e){}
+  priceOverrides={};   // 牌價固定依牌價本，不採用任何手動修改
+}
+function saveData(){ try{ localStorage.setItem('itai_ov3',JSON.stringify(overrides)); }catch(e){} }
+function savePrices(){}
+function fmt(n){ return '$'+Math.round(n).toLocaleString('zh-TW'); }
+function getP(id){ return PRODUCTS.find(p=>p.id===id); }
+function getM(id, v){
+  const p=getP(id); const o=overrides[id]||{};
+  // 規格自帶的安裝費（例：金冠4000 一字四門／轉角型 2,700）優先於款式預設；
+  // 長按卡片手動改過安裝費時，以手動設定為準
+  let fee=(v&&v.installFee!=null)?v.installFee:p.installFee;
+  if(o.installFee!=null && o.installFee!==p.installFee) fee=o.installFee;
+  return {...p, installType:o.installType||p.installType, installFee:fee, surveyFee:o.surveyFee!=null?o.surveyFee:p.surveyFee};
+}
+
+// 牌價（含「牌價」分頁手動修改的價格）
+function priceKey(v,s){ return v.path.concat(s.label).join('|'); }
+function getPrice(productId, v, s){
+  const ov=(priceOverrides[productId]||{})[priceKey(v,s)];
+  return ov!=null ? ov : s.price;
+}
+function minPrice(p){
+  let m=Infinity;
+  p.variants.forEach(v=>v.sizes.forEach(s=>{ m=Math.min(m,getPrice(p.id,v,s)); }));
+  return m;
+}
+
+// =====================================================================
+// Tab switching
+// =====================================================================
+function switchTab(tab){
+  currentTab=tab;
+  document.getElementById('tabCalc').style.display=tab==='calc'?'block':'none';
+  document.getElementById('tabBath').style.display=tab==='bath'?'block':'none';
+  document.getElementById('tabPrice').style.display=tab==='price'?'block':'none';
+  document.getElementById('quoteBar').style.display=tab==='calc'?'flex':'none';
+  document.getElementById('btnCalc').classList.toggle('active',tab==='calc');
+  document.getElementById('btnBath').classList.toggle('active',tab==='bath');
+  if(tab==='price') renderPricePanel();
+  if(tab==='bath') renderBathTab();
+}
+
+// =====================================================================
+// Spec step logic
+// =====================================================================
+// 規格選擇：stepSel[i] 存第 i 步選到的文字；sizeSel 是尺寸索引；colorSel 是顏色索引
+function stepOptions(p,i){
+  const out=[];
+  p.variants.forEach(v=>{
+    for(let k=0;k<i;k++){ if(v.path[k]!==stepSel[k]) return; }
+    if(!out.includes(v.path[i])) out.push(v.path[i]);
+  });
+  return out;
+}
+function currentVariant(p){
+  if(!p) return null;
+  const n=p.stepLabels.length;
+  for(let i=0;i<n;i++){ if(stepSel[i]==null) return null; }
+  return p.variants.find(v=>v.path.every((x,i)=>x===stepSel[i]))||null;
+}
+// 只有一個選項的步驟自動帶入
+function autoFill(p){
+  const n=p.stepLabels.length;
+  for(let i=0;i<n;i++){
+    if(stepSel[i]==null){
+      const o=stepOptions(p,i);
+      if(o.length===1) stepSel[i]=o[0]; else return;
+    }
+  }
+  const v=currentVariant(p);
+  if(v && sizeSel==null && v.sizes.length===1) sizeSel=0;
+}
+
+// =====================================================================
+// Product cards
+// =====================================================================
+function renderCards(){
+  const grid=document.getElementById('productGrid');
+  grid.innerHTML='';
+  PRODUCTS.forEach(p=>{
+    const m=getM(p.id);
+    const card=document.createElement('div');
+    card.className='product-card'+(selectedId===p.id?' selected':'');
+    const iText=m.installType==='included'?'✓ 安裝含牌價':`＋安裝 ${fmt(m.installFee)}`;
+    const iCls=m.installType==='included'?'b-inc':'b-ext';
+    // Get starting price (use override if exists)
+    const startPrice=minPrice(p);
+    const seriesName=p.name.split('\n')[1]||'';
+    const shortName=p.name.split('\n')[0]||'';
+    card.innerHTML=`<img src="${p.img}" alt="" loading="lazy" onerror="this.style.background='#ddd'">
+      <div class="pc-body">
+        <div class="pc-series">${seriesName}</div>
+        <div class="pc-name">${shortName}</div>
+        <div class="pc-price">${fmt(startPrice)}～</div>
+        <div class="pc-badge ${iCls}">${iText}</div>
+      </div>`;
+    card.addEventListener('click',()=>selectProduct(p.id));
+    let pt;
+    card.addEventListener('touchstart',()=>{pt=setTimeout(()=>openModal(p.id),650)},{passive:true});
+    card.addEventListener('touchend',()=>clearTimeout(pt));
+    card.addEventListener('mousedown',()=>{pt=setTimeout(()=>openModal(p.id),650)});
+    card.addEventListener('mouseup',()=>clearTimeout(pt));
+    card.addEventListener('mouseleave',()=>clearTimeout(pt));
+    grid.appendChild(card);
+  });
+}
+
+// =====================================================================
+// Select product
+// =====================================================================
+function isHuangguan(id){ return id && id.startsWith('h'); }
+
+function selectProduct(id){
+  selectedId=id; stepSel=[]; sizeSel=null; colorSel=0;
+  autoFill(getP(id));
+  stripColor=null; stripSize=null;
+  thresholdSizeOverride=null;
+  resetAddons();
+  // 擋水鋁條只在皇冠系列顯示
+  const stripRow=document.getElementById('stripRow');
+  const stripDet=document.getElementById('stripDetail');
+  if(isHuangguan(id)){
+    stripRow.style.display='flex';
+  } else {
+    stripRow.style.display='none';
+    document.getElementById('stripToggle').checked=false;
+    stripDet.style.display='none';
+  }
+  renderCards(); renderSpec(); showSections(); updateHeight(); updateWidthLabel(); renderAddons(); calculate(); renderThresholdDetail();
+}
+
+function onStripToggle(){
+  const on=document.getElementById('stripToggle').checked;
+  document.getElementById('stripDetail').style.display=on?'block':'none';
+  if(!on){ stripColor=null; stripSize=null; }
+  calculate();
+}
+
+function selectStrip(type, val){
+  if(type==='color') stripColor=val;
+  if(type==='size') stripSize=val;
+  // Update chip states
+  if(type==='color'){
+    document.querySelectorAll('#stripColorRow .chip').forEach(b=>{
+      b.classList.toggle('sel', b.dataset.val===val);
+    });
+  }
+  if(type==='size'){
+    document.querySelectorAll('#stripSizeRow .chip').forEach(b=>{
+      b.classList.toggle('sel', b.dataset.val===val);
+    });
+  }
+  // Show price note
+  const note=document.getElementById('stripPriceNote');
+  if(stripColor && stripSize){
+    const price=STRIP_PRICES[stripColor][stripSize];
+    if(price) note.textContent=`擋水鋁條 ${stripColor==='P'?'白金P':stripColor==='J'?'霧銀J':'黑色B'} × ${stripSize==='100'?'100cm以內':stripSize==='210'?'101-210cm':'211-310cm'} → ${fmt(price)}（不打折）`;
+    else note.textContent='此規格無牌價，請洽詢業務';
+  }
+  calculate();
+}
+
+function getStripCost(){
+  if(!document.getElementById('stripToggle').checked) return 0;
+  if(!stripColor||!stripSize) return 0;
+  return STRIP_PRICES[stripColor][stripSize]||0;
+}
+
+// =====================================================================
+// Spec steps rendering
+// =====================================================================
+function renderSpec(){
+  const sec=document.getElementById('specSection');
+  const body=document.getElementById('specBody');
+  if(!selectedId){ sec.style.display='none'; return; }
+  const p=getP(selectedId);
+  sec.style.display='block';
+  let html='';
+  const n=p.stepLabels.length;
+
+  for(let si=0;si<n;si++){
+    if(si>0 && stepSel[si-1]==null) break;
+    html+=`<div class="step-label">${p.stepLabels[si]}</div><div class="step-row">`;
+    stepOptions(p,si).forEach((lbl,li)=>{
+      html+=`<button class="chip${stepSel[si]===lbl?' sel':''}" onclick="selectStep(${si},${li})">${lbl}</button>`;
+    });
+    html+='</div>';
+  }
+
+  const v=currentVariant(p);
+  if(v){
+    if(p.colors){
+      html+=`<div class="step-label">顏色</div><div class="step-row">`;
+      p.colors.forEach((c,ci)=>{
+        html+=`<button class="chip${colorSel===ci?' sel':''}" onclick="selectColor(${ci})">${c.label}</button>`;
+      });
+      html+='</div>';
+    }
+    html+=`<div class="step-label">${p.sizeLabel||'寬度'}</div><div class="step-row">`;
+    v.sizes.forEach((s,li)=>{
+      html+=`<button class="chip${sizeSel===li?' sel':''}" onclick="selectSize(${li})">${s.label}</button>`;
+    });
+    html+='</div>';
+    html+=`<div style="margin-top:4px"><span class="height-pill">↕ 牌價預設高度 ${v.h} cm</span></div>`;
+  }
+  if(p.note){
+    html+=`<div class="spec-note">${p.note}</div>`;
+  }
+  body.innerHTML=html;
+}
+
+function afterSpecChange(){
+  thresholdSizeOverride=null;
+  renderSpec(); updateHeight(); updateWidthLabel(); renderAddons(); calculate();
+  renderThresholdDetail();
+}
+function selectStep(si,li){
+  const p=getP(selectedId);
+  stepSel[si]=stepOptions(p,si)[li];
+  stepSel.length=si+1;
+  sizeSel=null;
+  autoFill(p);
+  afterSpecChange();
+}
+function selectSize(li){ sizeSel=li; afterSpecChange(); }
+function selectColor(ci){
+  colorSel=ci;
+  const c=getP(selectedId).colors;
+  if(c) frameColor=c[ci].mult>1?1:0;   // 固定框鋁框顏色跟著拉門
+  afterSpecChange();
+}
+
+// =====================================================================
+// Price item resolution
+// =====================================================================
+function getCurrentPriceItem(){
+  if(!selectedId) return null;
+  const p=getP(selectedId);
+  const v=currentVariant(p);
+  if(!v||sizeSel==null) return null;
+  const s=v.sizes[sizeSel];
+  if(!s) return null;
+  const listPrice=getPrice(p.id,v,s);
+  const color=p.colors?p.colors[colorSel]:null;
+  const mult=color?color.mult:1;
+  return {price:Math.round(listPrice*mult), listPrice, height:v.h, variant:v, size:s, color};
+}
+
+// 寬度欄的說明文字依型式切換
+function updateWidthLabel(){
+  const el=document.getElementById('widthLabel');
+  if(!el) return;
+  const shape=getThresholdShape();
+  el.textContent = (shape==='L'||shape==='W') ? WIDTH_LABEL_CORNER : '寬度（cm）';
+}
+
+function showSections(){
+  const show=!!selectedId;
+  ['sizeSection','optSection','discountSection','summaryBox'].forEach(id=>{
+    document.getElementById(id).style.display=show?'block':'none';
+  });
+}
+
+// =====================================================================
+// Threshold (smart shape-aware)
+// =====================================================================
+function renderThresholdDetail(){
+  const on=document.getElementById('thresholdToggle').checked;
+  const det=document.getElementById('thresholdDetail');
+  if(!on){ det.style.display='none'; return; }
+  det.style.display='block';
+
+  const info=getThresholdInfo();
+  if(!info){
+    det.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 10px;background:var(--cream-d);border-radius:7px">請先選擇拉門規格，門檻型式會自動判定</div>';
+    return;
+  }
+
+  const {shapeName, table, installPrice, hint} = info;
+  const idx=(thresholdSizeOverride!=null)?thresholdSizeOverride:info.sizeIdx;
+  const entry=idx!=null?table[idx]:null;
+
+  let sizeHtml='<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">';
+  table.forEach((e,i)=>{
+    const sel=(idx===i);
+    sizeHtml+=`<button class="chip${sel?' sel':''}" style="${sel?'':'opacity:.6'}" onclick="selectThresholdSize(${i})" data-tidx="${i}">${e.size}</button>`;
+  });
+  sizeHtml+='</div>';
+
+  const hintHtml = (hint && thresholdSizeOverride==null) ? `<div style="font-size:11px;color:var(--muted);margin-top:5px">${hint}</div>` : '';
+
+  let priceHtml='';
+  if(entry){
+    priceHtml=`<div class="threshold-info" style="margin-top:10px">
+      石材 ${fmt(entry.price)} ＋ 安裝費 ${fmt(installPrice)} ＝ <strong>合計 ${fmt(entry.price+installPrice)}</strong>（不打折）<br>
+      <span style="font-size:11px;color:#2d6a2d">${shapeName} ${entry.size}${thresholdSizeOverride!=null?'（手動選擇）':''}</span>
+    </div>`;
+  }
+
+  det.innerHTML=`<div style="padding-top:6px">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:2px">依型式自動判定：<strong style="color:var(--navy)">${shapeName}</strong></div>
+    ${sizeHtml}
+    ${hintHtml}
+    ${priceHtml}
+  </div>`;
+}
+
+function selectThresholdSize(idx){
+  thresholdSizeOverride=idx;
+  renderThresholdDetail();
+  calculate();
+}
+
+function getThresholdCost(){
+  if(!document.getElementById('thresholdToggle').checked) return 0;
+  const info=getThresholdInfo();
+  if(!info) return 0;
+  // Use manual override if set, else auto
+  const idx=(thresholdSizeOverride!=null)?thresholdSizeOverride:info.sizeIdx;
+  if(idx==null) return 0;
+  const entry=info.table[idx];
+  if(!entry) return 0;
+  return entry.price + THRESH_INSTALL;
+}
+
+function getThresholdLabel(){
+  if(!document.getElementById('thresholdToggle').checked) return null;
+  const info=getThresholdInfo();
+  if(!info) return null;
+  const idx=(thresholdSizeOverride!=null)?thresholdSizeOverride:info.sizeIdx;
+  if(idx==null) return info.hint?'請選擇門檻尺寸':'請選擇門檻尺寸';
+  const entry=info.table[idx];
+  if(!entry) return null;
+  return `${info.shapeName} ${entry.size} 石材${fmt(entry.price)}＋安裝${fmt(THRESH_INSTALL)}`;
+}
+
+function refreshThresholdLabel(){
+  const on=document.getElementById('thresholdToggle').checked;
+  if(on) renderThresholdDetail();
+}
+
+function onThresholdToggle(){
+  thresholdSizeOverride=null;
+  renderThresholdDetail();
+  calculate();
+}
+
+// =====================================================================
+// Calculate
+// =====================================================================
+// 報價計算：畫面明細與「複製報價單」共用同一份結果
+function computeQuote(){
+  if(!selectedId) return null;
+  const p=getP(selectedId);
+  const item=getCurrentPriceItem();
+  const discount=Math.min(100,Math.max(1,parseFloat(document.getElementById('discount').value)||100));
+  const rate=discount/100;
+  const w=parseFloat(document.getElementById('width').value)||0;
+  const h=getHeight();
+  const film=getFilm(w,h);
+  if(!item) return {p,item:null,w,h,film,discount};
+
+  const m=getM(selectedId,item.variant);
+  const lines=[]; let total=0;
+  const add=(label,amount,opt)=>{ lines.push(Object.assign({label,amount},opt||{})); if(amount&&!(opt&&opt.info)) total+=amount; };
+
+  const discounted=Math.round(item.price*rate);
+  add(dealerMode?`經銷價（牌價 ×${discount}折）`:`牌價 ×${discount}折`, discounted, {cls:'disc'});
+  add(item.color&&item.color.mult!==1?`原牌價（${item.color.short||item.color.label} ${fmt(item.listPrice)}×${item.color.mult}）`:'原牌價', item.price, {info:true});
+
+  if(m.installType==='included') add('安裝費',0,{text:'✓ 含於牌價',copyText:'已含於牌價'});
+  else add('安裝費（不打折）', m.installFee);
+  if(m.surveyFee>0) add('丈量費（不打折）', m.surveyFee);
+
+  if(document.getElementById('filmToggle').checked){
+    if(film.cost>0) add(`防爆貼膜 ${film.name} ${film.cai}才×$${film.rate}（${dealerMode?'經銷價':'不打折'}）`, film.cost);
+    else add('防爆貼膜',0,{text:'請輸入寬度',skipCopy:true});
+  }
+  if(document.getElementById('thresholdToggle').checked){
+    const tCost=getThresholdCost();
+    if(tCost>0) add(`門檻含安裝（不打折）`, tCost, {sub:getThresholdLabel()});
+    else add('門檻含安裝',0,{text:getThresholdLabel()||'請選擇門檻尺寸',skipCopy:true});
+  }
+  if(document.getElementById('stripToggle').checked){
+    const stripCost=getStripCost();
+    if(stripCost>0){
+      const colorName=stripColor==='P'?'白金P':stripColor==='J'?'霧銀J':'黑色B';
+      const sizeName=stripSize==='100'?'100cm以內':stripSize==='210'?'101-210cm':'211-310cm';
+      add(`擋水鋁條 ${colorName} ${sizeName}（不打折）`, stripCost);
+    } else if(stripColor&&stripSize){
+      add('擋水鋁條',0,{text:'此規格請洽詢',skipCopy:true});
+    } else {
+      add('擋水鋁條',0,{text:'請選擇顏色及長度',skipCopy:true});
+    }
+  }
+  const dTag = discount<100 ? ` ×${discount}折` : '';   // 玻璃加價、固定框隨牌價折扣
+  const hc=getHandleCost();
+  if(hc){
+    if(hc.total>0) add(`把手 ${hc.id} ${hc.kind}${hc.qty>1?' ×'+hc.qty:''}（不打折）`, hc.total);
+    else add(`把手換 ${hc.id}`,0,{text:'不加價',copyText:'不加價'});
+  }
+  const gc=getGlassCost();
+  if(gc){
+    if(gc.total>0) add(`玻璃更換 ${gc.opt.label} ${gc.cai.toFixed(1)}才×$${gc.opt.rate}${dTag}`, Math.round(gc.total*rate));
+    else add(`玻璃更換 ${gc.opt.label}`,0,{text:'請輸入寬度',skipCopy:true});
+  }
+  const fc=getFrameCost();
+  if(fc){
+    fc.items.forEach(({f,r})=>{
+      add(`固定框 ${r.name} ${f.w}×${f.h}${r.mullion?'＋中直腰':''}${r.mult!==1?'（霧銀）':''}${f.qty>1?' ×'+f.qty:''}${dTag}`, Math.round(r.total*rate));
+    });
+    if(fc.n>0) add(`固定框安裝費 ${fc.n}個（不打折）`, fc.install);
+    if(fc.pending>0) add('固定框',0,{text:'請輸入寬、高',skipCopy:true});
+  }
+  return {p,item,m,w,h,film,discount,lines,total};
+}
+
+function calculate(){
+  if(!selectedId) return;
+  const q=computeQuote();
+  renderFilmUI();
+  const {w,h,film}=q;
+  document.getElementById('filmLabel').textContent=
+    (w>0&&h>0)?`${(w/100).toFixed(2)}m×${(h/100).toFixed(2)}m×10.89=${film.cai}才 × $${film.rate}（${film.name}）→${fmt(film.cost)}`:'請先輸入寬度及選擇規格';
+
+  const qb=document.getElementById('qbAmount');
+  if(!q.item){
+    qb.textContent='請選擇規格'; qb.className='qb-amount pending';
+    document.getElementById('detailWrap').innerHTML='';
+    document.getElementById('priceDetails').innerHTML='<div class="price-total-row"><div class="price-total-label">合計估價</div><div class="price-total-amount" style="font-size:15px">請先選完規格</div></div>';
+    return;
+  }
+
+  let detHtml='';
+  q.lines.forEach(l=>{
+    detHtml+=`<div class="detail-row ${l.cls||'nd'}"><span>${l.label}</span><span>${l.text!=null?l.text:fmt(l.amount)}</span></div>`;
+  });
+  document.getElementById('detailWrap').innerHTML=detHtml;
+  document.getElementById('priceDetails').innerHTML=`
+    <div class="price-total-row">
+      <div class="price-total-label">合計估價</div>
+      <div class="price-total-amount">${fmt(q.total)}</div>
+    </div>`;
+
+  qb.textContent=fmt(q.total);
+  qb.className='qb-amount';
+}
+
+function toggleDetail(){
+  detailOpen=!detailOpen;
+  document.getElementById('detailWrap').classList.toggle('open',detailOpen);
+  document.querySelector('.detail-toggle').textContent=detailOpen?'▲ 收起明細':'▼ 展開明細';
+}
+
+// =====================================================================
+// Discount
+// =====================================================================
+// 防爆膜：霧面／透明 $100/才、髮絲膜 $200/才；經銷價 $70／$170
+const FILM_TYPES={matte:{name:'霧面',rate:100,dealer:70},clear:{name:'透明',rate:100,dealer:70},hair:{name:'髮絲膜',rate:200,dealer:170}};
+let filmType='matte';
+let dealerMode=false;
+function getFilm(w,h){
+  const f=FILM_TYPES[filmType];
+  const rate=dealerMode?f.dealer:f.rate;
+  const cai=(w>0&&h>0)?Math.ceil((w/100)*(h/100)*10.89):0;
+  return {name:f.name,rate,cai,cost:cai*rate};
+}
+function setFilmType(t){
+  filmType=t;
+  document.getElementById('filmToggle').checked=true;
+  calculate();
+}
+function renderFilmUI(){
+  const on=document.getElementById('filmToggle').checked;
+  document.getElementById('filmTypes').classList.toggle('off',!on);
+  document.querySelectorAll('.film-btn').forEach(b=>b.classList.toggle('active',b.dataset.film===filmType));
+  const r=k=>'$'+(dealerMode?FILM_TYPES[k].dealer:FILM_TYPES[k].rate)+'/才';
+  document.getElementById('filmRateMatte').textContent=r('matte');
+  document.getElementById('filmRateClear').textContent=r('clear');
+  document.getElementById('filmRateHair').textContent=r('hair');
+  document.getElementById('dealerBtn').classList.toggle('active',dealerMode);
+}
+function toggleDealer(){
+  const on=!dealerMode;
+  setDiscount(on?60:100);   // setDiscount 會先關閉經銷模式
+  dealerMode=on;
+  calculate();
+}
+function setDiscount(val){
+  dealerMode=false;
+  document.getElementById('discount').value=val;
+  document.querySelectorAll('.preset-btn').forEach(b=>{
+    b.classList.toggle('active',(val===100&&b.textContent==='不打折')||(b.textContent===val+'折'));
+  });
+  calculate();
+}
+function onDiscountInput(){
+  dealerMode=false;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  calculate();
+}
+
+// =====================================================================
+// Copy quote
+// =====================================================================
+function copyQuote(){
+  if(!selectedId){ showToast('請先選擇款式'); return; }
+  const q=computeQuote();
+  if(!q||!q.item){ showToast('請完成規格選擇'); return; }
+  const {p,item,w,h}=q;
+  let t=`【一太e衛浴 報價單】\n━━━━━━━━━━━━━━\n`;
+  t+=`款式：${p.name.replace('\n',' ')}\n`;
+  const spec=item.variant.path.concat(item.color?[item.color.label]:[],[item.size.label]).join('／');
+  t+=`規格：${spec}\n`;
+  if(w) t+=`尺寸：${w} × ${h} cm\n`;
+  t+=`━━━━━━━━━━━━━━\n`;
+  q.lines.forEach(l=>{
+    if(l.info||l.skipCopy) return;
+    t+=`${l.label}：${l.copyText!=null?l.copyText:fmt(l.amount)}\n`;
+  });
+  t+=`━━━━━━━━━━━━━━\n合計估價：${fmt(q.total)}\n`;
+  t+=`※ 初步估算，實際以丈量為準\n📞 0800-042-111`;
+  navigator.clipboard.writeText(t).then(()=>showToast('✓ 報價單已複製')).catch(()=>{
+    const ta=document.createElement('textarea'); ta.value=t;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); showToast('✓ 報價單已複製');
+  });
+}
+
+// =====================================================================
+// Toast
+// =====================================================================
+let toastT;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+// =====================================================================
+// Install modal
+// =====================================================================
+function openModal(id){
+  const m=getM(id); const p=getP(id);
+  document.getElementById('editingId').value=id;
+  document.getElementById('modalTitle').textContent=p.name.replace('\n',' ')+' — 安裝費設定';
+  document.getElementById('editInstallType').value=m.installType;
+  document.getElementById('editInstallFee').value=m.installFee||'';
+  document.getElementById('editSurveyFee').value=m.surveyFee!=null?m.surveyFee:500;
+  document.getElementById('installFeeWrap').style.display=m.installType==='extra'?'block':'none';
+  document.getElementById('editModal').classList.add('show');
+}
+function toggleInstallFeeField(){
+  document.getElementById('installFeeWrap').style.display=document.getElementById('editInstallType').value==='extra'?'block':'none';
+}
+function saveM(){
+  const id=document.getElementById('editingId').value;
+  overrides[id]={
+    installType:document.getElementById('editInstallType').value,
+    installFee:parseFloat(document.getElementById('editInstallFee').value)||0,
+    surveyFee:parseFloat(document.getElementById('editSurveyFee').value)||0,
+  };
+  saveData(); closeM(); renderCards();
+  if(selectedId===id) calculate();
+}
+function closeM(){ document.getElementById('editModal').classList.remove('show'); }
+function closeMBg(e){ if(e.target===document.getElementById('editModal')) closeM(); }
+
+// =====================================================================
+// Price edit panel
+// =====================================================================
+function flattenPriceRows(p){
+  const rows=[];
+  const ovMap=(priceOverrides[p.id]||{});
+  p.variants.forEach((v,vi)=>{
+    v.sizes.forEach((s,si)=>{
+      const key=priceKey(v,s);
+      const ov=ovMap[key];
+      rows.push({vi, si, key, label:v.path.concat(s.label).join(' · '), price:ov!=null?ov:s.price, origPrice:s.price, edited:ov!=null});
+    });
+  });
+  return rows;
+}
+
+function renderPricePanel(){
+  const panel=document.getElementById('priceEditPanel');
+  let html='';
+  html+=`<div class="pe-header"><div class="pe-title">所有款式牌價</div><div class="pe-hint">牌價本 202604</div></div>`;
+  PRODUCTS.forEach(p=>{
+    const rows=flattenPriceRows(p);
+    if(rows.length===0) return;
+    html+=`<div class="pe-product">`;
+    html+=`<div class="pe-pname">${p.name.replace('\n',' ')}</div>`;
+    html+=`<div class="pe-table">`;
+    rows.forEach(r=>{
+      html+=`<div class="pe-row" style="cursor:default">
+        <div class="pe-label">${r.label||'—'}</div>
+        <div class="pe-price">${fmt(r.price)}</div>
+      </div>`;
+    });
+    html+='</div></div>';
+  });
+  panel.innerHTML=html;
+}
+
+function openPriceModal(){}
+function savePriceM(){ closePriceM(); }
+function resetThisPrice(){ closePriceM(); }
+function resetAllPrices(){}
+
+function closePriceM(){ document.getElementById('priceModal').classList.remove('show'); pEditContext=null; }
+function closePriceMBg(e){ if(e.target===document.getElementById('priceModal')) closePriceM(); }
+
+// =====================================================================
+// 加購：把手更換、玻璃更換、固定框（牌價本附表一、附表二）
+// =====================================================================
+// 把手加換購售價（附表二）。標配把手換款＝補差價，換低階不退差價。
+const HANDLES=[
+  {id:'ET-18-P-S',price:700,desc:'單珠'},
+  {id:'ET-18-J',price:700,desc:'單珠 鋁合金'},
+  {id:'ET-624B-S',price:1300,desc:'毛巾桿 45.5cm'},
+  {id:'ET-PB039-S',price:1300,desc:'毛巾桿 45cm'},
+  {id:'ET-625D-S',price:1300,desc:'D型 15cm'},
+  {id:'ET-628-SS',price:1300,desc:'毛巾桿 45.5cm'},
+  {id:'Z-GH7103',price:1300,desc:'圓形'},
+  {id:'Z-GH7063',price:1300,desc:'圓柱'},
+  {id:'ET-C200-S',price:1300,desc:'H型 20cm'},
+  {id:'ET-18-P-S-BB',price:1300,desc:'單珠 黑'},
+  {id:'ET-PB6015-BB',price:1300,desc:'毛巾桿 45cm 黑'},
+  {id:'ET-624B-S-BB',price:1800,desc:'毛巾桿 45.5cm 黑'},
+  {id:'ET-PB039-S-BB',price:1800,desc:'毛巾桿 45cm 黑'},
+  {id:'ET-639-S',price:2300,desc:'T型 52cm'},
+  {id:'ET-PH624-S',price:2300,desc:'毛巾桿 45.5cm'},
+  {id:'ET-PH630-S',price:2300,desc:'方管 45.5cm'},
+  {id:'ET-PH624-S-BB',price:2300,desc:'毛巾桿 45.5cm 黑'},
+  {id:'ET-639-S-BB',price:2800,desc:'T型 52cm 黑'},
+];
+function handleById(id){ return HANDLES.find(h=>h.id===id)||null; }
+
+// 各款式的加購設定：stdHandle 標配把手、glass 原玻璃厚度、fixFirstAdd 第一個固定框的安裝加價
+const PRODUCT_EXTRAS={
+  // 金冠 2001／4000／5000、海龍、金龍：把手是框體橫桿，無可換標配
+  j2001:{fixFirstAdd:600}, j4000:{fixFirstAdd:600}, j5000:{fixFirstAdd:600},
+  jinlong6000:{fixFirstAdd:400}, hailong2000:{fixFirstAdd:600},
+  // 金冠 6000／6001／7000：型錄照片為單珠把手
+  j6000:{fixFirstAdd:600,stdHandle:'ET-18-J',stdNote:'單珠把手，與 ET-18-P-S 同價'},
+  j6001:{fixFirstAdd:600,stdHandle:'ET-18-J',stdNote:'單珠把手，與 ET-18-P-S 同價'},
+  j7000:{fixFirstAdd:600,stdHandle:'ET-18-J',stdNote:'單珠把手，與 ET-18-P-S 同價'},
+  // 皇冠橫拉
+  h5028:{glass:'8',stdHandle:'ET-628-SS',handleQty:2},
+  h5038:{glass:'10',stdHandle:'ET-18-P-S'},
+  h5048:{glass:'8',stdHandle:'ET-18-P-S'}, h5058:{glass:'8',stdHandle:'ET-18-P-S'},
+  h5248al:{glass:'8',stdHandle:'ET-639-S'}, h5248ss:{glass:'8',stdHandle:'ET-639-S'},
+  h5248b:{glass:'8',stdHandle:'ET-639-S-BB'},
+  h5488:{glass:'8',noHandle:true},   // 特殊標配方管把手，不可換款
+  // 皇冠無框
+  h5024:{glass:'8',stdHandle:'ET-624B-S',stdNote:'5100 標配為直桿 ET-628-SS，同為 $1,300'},
+  h5300:{glass:'8',stdHandle:'ET-628-SS'}, h5700:{glass:'8',stdHandle:'ET-624B-S'},
+  h5800:{glass:'8',stdHandle:'ET-624B-S'}, h5900:{glass:'8',stdHandle:'ET-PB039-S'},
+  h6800:{glass:'8',stdHandle:'ET-628-SS'},
+  h5588:{glass:'8',stdHandle:'ET-PB6015-BB'},
+  h5198:{stdHandle:'ET-624B-S',glassNo10:true}, h8000:{stdHandle:'ET-624B-S-BB',glassNo10:true},
+  h5024b:{glass:'8',stdHandle:'ET-624B-S-BB',stdNote:'5100B 標配為直桿 ET-PB039-S-BB，同為 $1,800'},
+  h5800b:{glass:'8',stdHandle:'ET-624B-S-BB'},
+  // 鍍鈦：牌價本 p.09 只列「ET-624B-S 換 T型 ET-639-S 加 1,800」，其他另行報價
+  h5024ti:{glass:'8',stdHandle:'ET-624B-S',handleFixed:[{id:'ET-639-S',label:'T型把手 ET-639-S（鍍鈦）',add:1800}]},
+};
+PRODUCTS.forEach(p=>Object.assign(p,PRODUCT_EXTRAS[p.id]||{}));
+
+// 玻璃更換加價（附表二 備註2）：寬(m)×高(m)×10.89×每才加價
+const GLASS_UP={
+  '4':[{id:'5clear',label:'5mm 透明強玻',rate:25},{id:'5silver',label:'5mm 銀霞強玻',rate:40}],
+  '8':[{id:'10clear',label:'10mm 透明強玻',rate:40},{id:'55white',label:'5+5 膠合白膜玻璃',rate:180},{id:'55clear',label:'5+5 膠合透明玻璃',rate:140}],
+};
+
+// 固定框（附表一）：FF_LONG 是 80–200 那一邊，各表的 cols 是 30–100 那一邊
+const FF_LONG=[80,90,100,110,120,130,140,150,160,170,180,190,200];
+const FF_MULLION=[300,350,400,450,500,550,600,650,700,750,800,850,900];
+const FF_TABLES={"ps3":{"name":"PS板 3mm","cols":[30,40,50],"rows":[[1855,2054,2120],[2032,2242,2308],[2208,2430,2497],[2384,2619,2685],[2560,2807,2873],[2736,2995,3062],[2913,3184,3250],[3089,3372,3438],[3265,3560,3627],[3441,3749,3815],[3617,3937,4003],[3793,4125,4191],[3970,4314,4380]]},"ps4":{"name":"PS板 4mm","cols":[30,40,50,60,70,80,90,100],"rows":[[1908,2160,2226,2666,2728,2771,2827,2900],[2089,2357,2423,2896,2959,3002,3057,3131],[2270,2554,2620,3126,3189,3232,3287,3361],[2450,2751,2817,3356,3419,3462,3517,3591],[2631,2948,3014,3586,3649,3692,3747,3821],[2811,3145,3211,3817,3879,3922,3978,4051],[2992,3342,3409,4047,4109,4152,4208,4281],[3172,3539,3606,4277,4340,4383,4438,4512],[3353,3737,3803,4507,4570,4613,4668,4742],[3534,3934,4000,4737,4800,4843,4898,4972],[3714,4131,4197,4968,5030,5073,5128,5202],[3895,4328,4394,5198,5260,5303,5359,5432],[4075,4525,4591,5428,5490,5533,5589,5663]]},"g4":{"name":"4mm 透明玻璃","cols":[30,40,50,60,70,80,90,100],"rows":[[1984,2129,2287,2421,2575,2710,2857,3022],[2183,2339,2508,2654,2819,2965,3124,3300],[2381,2548,2729,2887,3064,3221,3391,3579],[2580,2758,2950,3119,3308,3476,3658,3857],[2778,2968,3171,3352,3552,3732,3925,4135],[2976,3178,3393,3585,3796,3988,4192,4414],[3175,3388,3614,3817,4040,4243,4458,4692],[3373,3597,3835,4050,4284,4499,4725,4971],[3571,3807,4056,4283,4528,4754,4992,5249],[3770,4017,4278,4515,4772,5010,5259,5528],[3968,4227,4499,4748,5016,5265,5526,5806],[4166,4437,4720,4981,5261,5521,5793,6084],[4365,4646,4941,5213,5505,5776,6060,6363]]}};
+const FF_INSTALL_EACH=600;
+
+// ---- 狀態 ----
+let handleSel=null, handleQty=1;
+let glassSel=null;
+let frames=[], frameColor=0;
+
+function resetAddons(){
+  handleSel=null; handleQty=(selectedId&&getP(selectedId).handleQty)||1; glassSel=null; frames=[];
+  frameColor=['j6000','j6001','j7000'].includes(selectedId)?1:0;
+  ['handleToggle','glassToggle','frameToggle'].forEach(id=>{ document.getElementById(id).checked=false; });
+  document.getElementById('heightInput').value='';
+}
+
+// ---- 高度：不輸入＝牌價預設；可手動輸入，但不可高於預設 ----
+function getHeight(){
+  const v=selectedId?currentVariant(getP(selectedId)):null;
+  if(!v) return 0;
+  const val=parseFloat(document.getElementById('heightInput').value);
+  if(!val||val<=0) return v.h;
+  return Math.min(val,v.h);
+}
+function onHeightInput(){
+  const el=document.getElementById('heightInput');
+  const v=selectedId?currentVariant(getP(selectedId)):null;
+  const val=parseFloat(el.value);
+  if(v && val>v.h){
+    el.value=v.h;
+    showToast(`高度不可超過牌價預設 ${v.h}cm`);
+  }
+  updateHeight(); refreshAddonNotes(); calculate();
+}
+function updateHeight(){
+  const el=document.getElementById('heightInput');
+  const hint=document.getElementById('heightHint');
+  const v=selectedId?currentVariant(getP(selectedId)):null;
+  if(!v){
+    el.disabled=true; el.value=''; el.placeholder='請先選擇規格'; hint.textContent='';
+    return;
+  }
+  el.disabled=false; el.max=v.h; el.placeholder=`預設 ${v.h}`;
+  if(parseFloat(el.value)>v.h) el.value='';
+  const val=parseFloat(el.value);
+  hint.innerHTML = val>0
+    ? `以 <strong>${val}cm</strong> 計算（牌價預設 ${v.h}cm，價格相同）`
+    : `不輸入＝牌價預設 ${v.h}cm，最高 ${v.h}cm`;
+}
+
+// ---- 把手 ----
+function handleStdId(pid){ return getP(pid).stdHandle||null; }
+function getHandleCost(){
+  if(!selectedId||!document.getElementById('handleToggle').checked||!handleSel) return null;
+  const p=getP(selectedId);
+  if(p.handleFixed){
+    const f=p.handleFixed.find(x=>x.id===handleSel);
+    return f?{id:f.id,unit:f.add,qty:handleQty,total:f.add*handleQty,kind:'換款'}:null;
+  }
+  const h=handleById(handleSel); if(!h) return null;
+  const std=handleById(handleStdId(p.id));
+  const unit=std?Math.max(0,h.price-std.price):h.price;
+  return {id:h.id,unit,qty:handleQty,total:unit*handleQty,kind:std?'補差價':'加購'};
+}
+function selectHandle(id){ handleSel=(handleSel===id)?null:id; renderHandle(); calculate(); }
+function handleQtyStep(d){ handleQty=Math.max(1,Math.min(9,handleQty+d)); renderHandle(); calculate(); }
+function renderHandle(){
+  const row=document.getElementById('handleRow'), det=document.getElementById('handleDetail'), sub=document.getElementById('handleSub');
+  if(!selectedId){ row.style.display='none'; det.style.display='none'; return; }
+  const p=getP(selectedId);
+  if(p.noHandle){ row.style.display='none'; det.style.display='none'; document.getElementById('handleToggle').checked=false; handleSel=null; return; }
+  row.style.display='flex';
+  const std=handleById(handleStdId(p.id));
+  sub.textContent = std ? `標配 ${std.id}（$${std.price.toLocaleString()}），換款補差價、不打折` : '加購依售價、不打折';
+  const on=document.getElementById('handleToggle').checked;
+  det.style.display=on?'block':'none';
+  if(!on) return;
+  let html='';
+  if(p.handleFixed){
+    html+=`<div class="addon-note">鍍鈦系列標配 ${std?std.id:''}，牌價本只列下列換款，其他顏色另行報價。</div><div class="step-row">`;
+    p.handleFixed.forEach(f=>{
+      html+=`<button class="chip${handleSel===f.id?' sel':''}" onclick="selectHandle('${f.id}')">${f.label} ＋$${f.add.toLocaleString()}</button>`;
+    });
+    html+='</div>';
+  } else {
+    html+=`<div class="addon-note">${std?`此款標配 <strong>${std.id}</strong>（$${std.price.toLocaleString()}）${p.stdNote?'；'+p.stdNote:''}。換款只補差價，換同價或較低階不加價也不退差價。`:'此款把手與框體一體，沒有可換的標配把手，加購依售價全額計算。'}</div>`;
+    html+='<div class="handle-grid">';
+    HANDLES.forEach(h=>{
+      const isStd=std&&std.id===h.id;
+      const diff=std?Math.max(0,h.price-std.price):h.price;
+      const tag=isStd?'<span class="h-tag std">標配</span>':diff>0?`<span class="h-tag up">＋$${diff.toLocaleString()}</span>`:'<span class="h-tag">不加價</span>';
+      html+=`<div class="handle-card${handleSel===h.id?' sel':''}${isStd?' is-std':''}" ${isStd?'':`onclick="selectHandle('${h.id}')"`}>
+        <img src="handle_imgs/${h.id}.jpg" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+        <div class="h-id">${h.id}</div>
+        <div class="h-desc">${h.desc}・$${h.price.toLocaleString()}</div>
+        ${tag}
+      </div>`;
+    });
+    html+='</div>';
+  }
+  const c=getHandleCost();
+  html+=`<div class="addon-qty">數量
+    <button class="bath-qty-btn" onclick="handleQtyStep(-1)">－</button><span class="bath-qty-num">${handleQty}</span><button class="bath-qty-btn" onclick="handleQtyStep(1)">＋</button>
+    <span class="addon-qty-hint">雙開門有兩支把手時改 2</span></div>`;
+  if(c){
+    html+=`<div class="threshold-info">${c.id} ${c.kind} ${fmt(c.unit)} × ${c.qty} ＝ <strong>${fmt(c.total)}</strong>（不打折）${c.unit===0?'<br><span style="font-size:11px">與標配同價或較低，不加價也不退差價</span>':''}</div>`;
+  }
+  det.innerHTML=html;
+}
+
+// ---- 玻璃 ----
+function variantGlass(p,v){
+  if(!v) return null;
+  for(const x of v.path){
+    if(x.indexOf('PS板')===0) return null;
+    if(x==='透明強玻 4mm') return '4';
+    if(x==='8mm') return '8';
+    if(x==='10mm') return '10';
+  }
+  return p.glass||null;
+}
+function glassOptions(){
+  if(!selectedId) return [];
+  const p=getP(selectedId); const v=currentVariant(p);
+  const base=variantGlass(p,v);
+  let opts=GLASS_UP[base]||[];
+  if(p.glassNo10) opts=opts.filter(o=>o.id!=='10clear');   // 這幾款 10mm 有自己的牌價表
+  return opts;
+}
+function getGlassCost(){
+  if(!selectedId||!document.getElementById('glassToggle').checked||!glassSel) return null;
+  const o=glassOptions().find(x=>x.id===glassSel); if(!o) return null;
+  const w=parseFloat(document.getElementById('width').value)||0; const h=getHeight();
+  if(!(w>0&&h>0)) return {opt:o,cai:0,total:0};
+  const cai=(w/100)*(h/100)*10.89;
+  return {opt:o,cai,total:Math.round(cai*o.rate),w,h};
+}
+function selectGlass(id){ glassSel=(glassSel===id)?null:id; renderGlass(); calculate(); }
+function glassNoteHtml(){
+  const c=getGlassCost();
+  if(!c) return '請選擇要更換的玻璃';
+  if(!c.total) return '請先輸入寬度';
+  return `${(c.w/100).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}m × ${(c.h/100).toFixed(2)}m × 10.89 × $${c.opt.rate} ＝ <strong>${fmt(c.total)}</strong>（${c.cai.toFixed(1)}才，隨牌價折扣）`;
+}
+function renderGlass(){
+  const row=document.getElementById('glassRow'), det=document.getElementById('glassDetail');
+  const opts=glassOptions();
+  if(!opts.length){
+    row.style.display='none'; det.style.display='none';
+    document.getElementById('glassToggle').checked=false; glassSel=null;
+    return;
+  }
+  if(glassSel && !opts.find(o=>o.id===glassSel)) glassSel=null;
+  row.style.display='flex';
+  const p=getP(selectedId); const base=variantGlass(p,currentVariant(p));
+  document.getElementById('glassSub').textContent=`原為 ${base}mm 透明強玻，依每才加價，隨牌價折扣`;
+  const on=document.getElementById('glassToggle').checked;
+  det.style.display=on?'block':'none';
+  if(!on) return;
+  let html='<div class="step-row">';
+  opts.forEach(o=>{ html+=`<button class="chip${glassSel===o.id?' sel':''}" onclick="selectGlass('${o.id}')">${o.label} ＋$${o.rate}/才</button>`; });
+  html+=`</div><div class="addon-note" id="glassNote">${glassNoteHtml()}</div>`;
+  det.innerHTML=html;
+}
+
+// ---- 固定框 ----
+function frameApplicable(){ return !!selectedId && getP(selectedId).fixFirstAdd!=null; }
+function frameCalc(f){
+  const a=parseFloat(f.w), b=parseFloat(f.h);
+  if(!(a>0&&b>0)) return {err:'請輸入寬、高'};
+  const t=FF_TABLES[f.mat];
+  const short=Math.min(a,b), long=Math.max(a,b);
+  const ci=t.cols.findIndex(c=>c>=short);
+  if(ci<0) return {err: f.mat==='ps3' ? `短邊超過 ${t.cols[t.cols.length-1]}cm，PS板請改用 4mm` : `短邊超過 ${t.cols[t.cols.length-1]}cm，附表沒有此尺寸，請另行報價`};
+  const ri=FF_LONG.findIndex(r=>r>=long);
+  if(ri<0) return {err:'長邊超過 200cm，附表沒有此尺寸，請另行報價'};
+  const autoM = f.mat==='g4' ? short>=90 : short>=50;
+  const mullion = f.mullion==null ? autoM : f.mullion;
+  const base=t.rows[ri][ci], mp=mullion?FF_MULLION[ri]:0;
+  const mult=frameColor===1?1.1:1;
+  const unit=Math.round((base+mp)*mult);
+  return {col:t.cols[ci], row:FF_LONG[ri], base, mp, mullion, autoM, mult, unit, total:unit*f.qty, name:t.name};
+}
+function getFrameCost(){
+  if(!frameApplicable()||!document.getElementById('frameToggle').checked) return null;
+  const p=getP(selectedId);
+  const items=[]; let n=0;
+  frames.forEach(f=>{ const r=frameCalc(f); if(!r.err){ items.push({f,r}); n+=f.qty; } });
+  const install = n>0 ? p.fixFirstAdd + FF_INSTALL_EACH*(n-1) : 0;
+  return {items,n,install,pending:frames.length-items.length};
+}
+function frameResHtml(f){
+  const r=frameCalc(f);
+  if(r.err) return `<span style="color:var(--muted)">${r.err}</span>`;
+  return `附表一 ${r.name}：${r.col} × ${r.row} → ${fmt(r.base)}${r.mp?` ＋中直腰 ${fmt(r.mp)}`:''}${r.mult!==1?' ×1.1（霧銀）':''} ＝ <strong>${fmt(r.unit)}</strong>${f.qty>1?` × ${f.qty} ＝ <strong>${fmt(r.total)}</strong>`:''}`;
+}
+function frameAdd(){ frames.push({mat:'ps4',w:'',h:'',mullion:null,qty:1}); renderFrames(); calculate(); }
+function frameDel(i){ frames.splice(i,1); renderFrames(); calculate(); }
+function frameSet(i,k,val){ frames[i][k]=val; if(k==='mat') frames[i].mullion=null; renderFrames(); calculate(); }
+function frameQty(i,d){ frames[i].qty=Math.max(1,Math.min(9,frames[i].qty+d)); renderFrames(); calculate(); }
+function frameInput(i,k,el){
+  frames[i][k]=el.value; frames[i].mullion=null;
+  // 打字中不重畫整張卡片（會失去游標），只更新結果與中直腰勾選
+  const r=frameCalc(frames[i]);
+  document.getElementById('frameRes'+i).innerHTML=frameResHtml(frames[i]);
+  const cb=document.getElementById('frameMul'+i); if(cb) cb.checked=!r.err&&r.mullion;
+  refreshFrameTotal(); calculate();
+}
+function refreshFrameTotal(){
+  const el=document.getElementById('frameTotal'); if(!el) return;
+  const c=getFrameCost();
+  if(!c||!c.n){ el.innerHTML=''; return; }
+  const sum=c.items.reduce((s,x)=>s+x.r.total,0);
+  el.innerHTML=`<div class="threshold-info">固定框 ${c.n} 個 ${fmt(sum)} ＋ 安裝費 ${fmt(c.install)} ＝ <strong>${fmt(sum+c.install)}</strong>（折扣前）<br><span style="font-size:11px">固定框隨牌價折扣；安裝費不打折：第一個 ＋${fmt(getP(selectedId).fixFirstAdd)}，之後每個 ＋${fmt(FF_INSTALL_EACH)}</span></div>`;
+}
+function setFrameColor(c){ frameColor=c; renderFrames(); calculate(); }
+function renderFrames(){
+  const row=document.getElementById('frameRow'), det=document.getElementById('frameDetail');
+  if(!frameApplicable()){
+    row.style.display='none'; det.style.display='none';
+    document.getElementById('frameToggle').checked=false; frames=[];
+    return;
+  }
+  row.style.display='flex';
+  const on=document.getElementById('frameToggle').checked;
+  det.style.display=on?'block':'none';
+  if(!on) return;
+  if(!frames.length) frames.push({mat:'ps4',w:'',h:'',mullion:null,qty:1});
+  let html=`<div class="addon-note">輸入固定框的寬、高，自動查附表一（短邊對 30–100、長邊對 80–200，不足的往上一級）。<a href="#" onclick="openPricebook(14);return false">查看附表一</a></div>`;
+  html+=`<div class="step-label">鋁框顏色</div><div class="step-row">
+    <button class="chip${frameColor===0?' sel':''}" onclick="setFrameColor(0)">純白</button>
+    <button class="chip${frameColor===1?' sel':''}" onclick="setFrameColor(1)">霧銀（加一成）</button></div>`;
+  frames.forEach((f,i)=>{
+    const r=frameCalc(f);
+    html+=`<div class="frame-card">
+      <div class="frame-hd"><span>固定框 ${i+1}</span>${frames.length>1?`<button class="frame-del" onclick="frameDel(${i})">✕ 移除</button>`:''}</div>
+      <div class="step-row">${Object.keys(FF_TABLES).map(k=>`<button class="chip${f.mat===k?' sel':''}" onclick="frameSet(${i},'mat','${k}')">${FF_TABLES[k].name}</button>`).join('')}</div>
+      <div class="frame-dims">
+        <div><label>寬（cm）</label><input type="number" inputmode="numeric" value="${f.w}" placeholder="例 60" oninput="frameInput(${i},'w',this)"></div>
+        <div><label>高（cm）</label><input type="number" inputmode="numeric" value="${f.h}" placeholder="例 190" oninput="frameInput(${i},'h',this)"></div>
+      </div>
+      <div class="frame-opts">
+        <label class="bath-removal-cb"><input type="checkbox" id="frameMul${i}" ${!r.err&&r.mullion?'checked':''} onchange="frameSet(${i},'mullion',this.checked)"> 加中直腰</label>
+        <span class="addon-qty" style="margin:0">數量
+          <button class="bath-qty-btn" onclick="frameQty(${i},-1)">－</button><span class="bath-qty-num">${f.qty}</span><button class="bath-qty-btn" onclick="frameQty(${i},1)">＋</button></span>
+      </div>
+      <div class="frame-res" id="frameRes${i}">${frameResHtml(f)}</div>
+    </div>`;
+  });
+  html+=`<button class="frame-add" onclick="frameAdd()">＋ 再加一種尺寸的固定框</button><div id="frameTotal"></div>`;
+  det.innerHTML=html;
+  refreshFrameTotal();
+}
+
+function renderAddons(){ renderHandle(); renderGlass(); renderFrames(); }
+// 寬度／高度變動時只更新文字，不重畫輸入框
+function refreshAddonNotes(){
+  const g=document.getElementById('glassNote'); if(g) g.innerHTML=glassNoteHtml();
+}
+function onAddonToggle(){ renderAddons(); calculate(); }
+
+// =====================================================================
+// 牌價本檢視（頁面圖片，不需另開 PDF）
+// =====================================================================
+const PB_PAGES=['封面','p.01 金冠2001／4000','p.02 金冠5000／6000／6001','p.03 金冠7000／桂冠3000／金龍6000','p.04 海龍2000／皇冠5028／5038','p.05 皇冠5048／5058','p.06 皇冠5198／5488','p.07 皇冠5248','p.08 無邊框5024／5300／5700','p.09 鍍鈦系列','p.10 皇冠5800／5800B','p.11 皇冠5900／6800','p.12 皇冠5588／8000','p.13 附表一 門檻・固定框','p.14 附表二 把手・玻璃加價','p.15 附表三 配件','p.16 附表五 屏風・固定桿','p.17 瓷盆浴櫃','p.18 瓷盆浴櫃','p.19 龍頭','p.20 衛浴配件','p.21 省水馬桶','p.22 浴缸','p.23 輔具','p.24 遠紅外線健康屋','p.25 整體衛浴','p.26 浴室門','服務據點'];
+let pbZoomLv=0;
+function openPricebook(page){
+  const v=document.getElementById('pbViewer'), sc=document.getElementById('pbScroll');
+  if(!sc.dataset.built){
+    sc.dataset.built='1';
+    sc.innerHTML=PB_PAGES.map((t,i)=>{
+      const n=String(i+1).padStart(2,'0');
+      return `<div class="pb-page" id="pbPage${i+1}"><img src="pricebook_pages/p-${n}.jpg" alt="${t}" loading="lazy" width="1106" height="1551"></div>`;
+    }).join('');
+    document.getElementById('pbJump').innerHTML=PB_PAGES.map((t,i)=>`<option value="${i+1}">${t}</option>`).join('');
+    // 捲動時，上方選單跟著顯示目前頁
+    sc.addEventListener('scroll',()=>{
+      const mid=sc.scrollTop+sc.offsetTop+sc.clientHeight/3;
+      const pages=sc.querySelectorAll('.pb-page');
+      for(let i=pages.length-1;i>=0;i--){ if(pages[i].offsetTop<=mid){ document.getElementById('pbJump').value=i+1; break; } }
+    },{passive:true});
+  }
+  v.style.display='flex';
+  if(page) setTimeout(()=>pbGo(page),50);
+}
+function closePricebook(){ document.getElementById('pbViewer').style.display='none'; }
+function pbGo(n){
+  const el=document.getElementById('pbPage'+n);
+  const sc=document.getElementById('pbScroll');
+  if(el){ sc.scrollTop=el.offsetTop-sc.offsetTop; document.getElementById('pbJump').value=n; }
+}
+function pbZoom(){
+  pbZoomLv=(pbZoomLv+1)%3;
+  const sc=document.getElementById('pbScroll');
+  const top=sc.scrollTop/sc.scrollHeight;
+  sc.style.setProperty('--pbw',['100%','170%','250%'][pbZoomLv]);
+  document.getElementById('pbZoomBtn').textContent=['🔍 放大','🔍 再放大','↺ 原尺寸'][pbZoomLv];
+  sc.scrollTop=top*sc.scrollHeight;
+}
+
+// =====================================================================
+// Init
+// =====================================================================
+loadData();
+renderCards();
+showSections();
+// Set calc tab active
+document.getElementById('btnCalc').classList.add('active');
+</script>
+</body>
+</html>
