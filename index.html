@@ -369,6 +369,22 @@ select:focus{border-color:var(--gold)}
           <label class="switch"><input type="checkbox" id="frameToggle" onchange="onAddonToggle()"><span class="slider"></span></label>
         </div>
         <div id="frameDetail" class="addon-detail" style="display:none"></div>
+        <!-- 舊拉門拆除／運棄（115.04.13 調整通知，非專程，不打折） -->
+        <div class="toggle-row">
+          <div class="tl">
+            <div class="tl-main">拆除舊拉門</div>
+            <div class="tl-sub">$1,500／件，安裝時當場拆除（非專程），不打折</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="doorRemoveToggle" onchange="calculate()"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="tl">
+            <div class="tl-main">舊拉門運棄</div>
+            <div class="tl-sub">$1,500／件，非專程，不打折</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="doorHaulToggle" onchange="calculate()"><span class="slider"></span></label>
+        </div>
+        <div class="addon-note">拆除、運棄為安裝本公司產品時當場處理的價格；專程拆除／運棄的費用同安裝費計價。新竹以北適用，其他地區依當地處理情況計收。</div>
       </div>
     </div>
 
@@ -412,7 +428,7 @@ select:focus{border-color:var(--gold)}
       <div class="section">
         <div class="section-hdr"><div class="snum">🛁</div><div class="stitle">衛浴配件系列</div></div>
         <div class="section-body">
-          <div class="bath-note">每組安裝費 $500（不打折）｜未達 $3,000 外加運費 $150</div>
+          <div class="bath-note">每組安裝費 $500｜舊掛件運棄 $300／件（不打折）｜未達 $3,000 外加運費 $150</div>
           <div id="bathAccessGrid" class="bath-grid"></div>
         </div>
       </div>
@@ -426,21 +442,21 @@ select:focus{border-color:var(--gold)}
       <div class="section">
         <div class="section-hdr"><div class="snum">🚽</div><div class="stitle">省水馬桶系列</div></div>
         <div class="section-body">
-          <div class="bath-note">安裝費每組 $2,500｜拆除舊馬桶 $800｜清運費 $1,800（不打折）</div>
+          <div class="bath-note">安裝費每組 $2,500｜拆除舊馬桶 $800／件｜運棄 $1,800／件（不打折）</div>
           <div id="bathToiletGrid" class="bath-grid"></div>
         </div>
       </div>
       <div class="section">
         <div class="section-hdr"><div class="snum">🚽</div><div class="stitle">智慧型馬桶</div></div>
         <div class="section-body">
-          <div class="bath-note">安裝費每組 $3,500｜拆除舊馬桶 $800｜清運費 $1,800（不打折）</div>
+          <div class="bath-note">安裝費每組 $3,500｜拆除舊馬桶 $800／件｜運棄 $1,800／件（不打折）</div>
           <div id="bathSmartToiletGrid" class="bath-grid"></div>
         </div>
       </div>
       <div class="section">
         <div class="section-hdr"><div class="snum">🚽</div><div class="stitle">電腦馬桶座系列</div></div>
         <div class="section-body">
-          <div class="bath-note">安裝費每組 $1,500（不打折）</div>
+          <div class="bath-note">安裝費每組 $1,500｜舊電腦馬桶座運棄 $300／件（不打折）</div>
           <div id="bathBidetGrid" class="bath-grid"></div>
         </div>
       </div>
@@ -1135,7 +1151,14 @@ let bathDiscount = 100; // 衛浴設備固定不打折（安裝費不折），�
 // toiletRemoval: { itemId: {removeOld: bool, haul: bool} }
 let toiletRemoval = {};
 
-const TOILET_CATS = ['toilet','smarttoilet'];
+// 拆除／運棄費用（每件，非專程，不打折）：依 115.04.13 產品拆除費用、運棄費用調整通知
+const REMOVAL_RULES = {
+  toilet:      {what:'馬桶', remove:800, haul:1800},
+  smarttoilet: {what:'馬桶', remove:800, haul:1800},
+  bidet:       {what:'電腦馬桶座', haul:300},
+  accessory:   {what:'衛浴掛件', haul:300},
+};
+const TOILET_CATS = Object.keys(REMOVAL_RULES);   // 有拆除／運棄選項的分類
 const BATH_PHOTOS = new Set(['ET-7006A', 'ET-7007A', 'ET-7008A', 'ET-7009A', 'ET-7010A', 'ET-BF65496BGS', 'ET-D-9788', 'ET-FDA2105', 'ET-FDB6110', 'ET-FDB6160', 'ET-FDB878', 'ET-SD-606', 'ET-SL-333', 'ET-TD-685', 'Z-109598', 'Z-22001MB', 'Z-22002MB', 'Z-22003MB', 'Z-22004MB', 'Z-22005MB', 'Z-22006MB', 'Z-22008MB', 'Z-22009MB', 'Z-22010MB', 'Z-D-11001', 'Z-D-11002', 'Z-D-11003', 'Z-D-11004', 'Z-D-11005', 'Z-D-11006', 'Z-D-11008', 'Z-D-11009', 'Z-D-11010', 'Z-D-11015', 'Z-D-115', 'Z-D-118', 'Z-D-12751', 'Z-D-12752', 'Z-D-135', 'Z-D-15001', 'Z-D-15003', 'Z-D-15004', 'Z-D-15005', 'Z-D-15006', 'Z-D-15008', 'Z-D-15009', 'Z-D-15010', 'Z-D-212', 'Z-D-2627', 'Z-D-410', 'Z-D-411', 'Z-D-412', 'Z-D-415', 'Z-D-416', 'Z-D-467', 'Z-D-468', 'Z-D-9088', 'Z-H-88', 'Z-P-412MB', 'Z-P-41MB', 'Z-TAP-518212', 'Z-TAP-535008', 'Z-WP-1100', 'Z-WP-1400', 'Z-WP-900']);
 const bathOpen = {}; // catId -> 是否展開（預設全部折疊）
 
@@ -1180,10 +1203,11 @@ function renderBathTab(){
       const tr = toiletRemoval[item.id] || {};
       const hasPhoto = BATH_PHOTOS.has(item.id);
       const photoHtml = hasPhoto ? `<img src="bath_imgs/${item.id}.jpg" class="bath-item-photo" alt="${item.model}" loading="lazy" onclick="bathZoom('${item.id}','${item.name} ${item.model}',event)" onerror="this.style.display='none'">` : '';
-      const removalHtml = (isToiletCat && qty>0) ? `
+      const rr = REMOVAL_RULES[cat.id];
+      const removalHtml = (rr && qty>0) ? `
         <div class="bath-removal-row" onclick="event.stopPropagation()">
-          <label class="bath-removal-cb"><input type="checkbox" ${tr.removeOld?'checked':''} onchange="bathSetRemoval('${item.id}','removeOld',this.checked)"> 拆除舊馬桶 $800/組</label>
-          <label class="bath-removal-cb"><input type="checkbox" ${tr.haul?'checked':''} onchange="bathSetRemoval('${item.id}','haul',this.checked)"> 清運費 $1,800/組</label>
+          ${rr.remove?`<label class="bath-removal-cb"><input type="checkbox" ${tr.removeOld?'checked':''} onchange="bathSetRemoval('${item.id}','removeOld',this.checked)"> 拆除舊${rr.what} $${rr.remove.toLocaleString()}/件</label>`:''}
+          ${rr.haul?`<label class="bath-removal-cb"><input type="checkbox" ${tr.haul?'checked':''} onchange="bathSetRemoval('${item.id}','haul',this.checked)"> 舊${rr.what}運棄 $${rr.haul.toLocaleString()}/件</label>`:''}
         </div>` : '';
       const installFee = item.installFeeOverride !== undefined ? item.installFeeOverride : cat.installFee;
       const div = document.createElement('div');
@@ -1254,9 +1278,10 @@ function renderBathSummary(){
       catProductTotal += v.price * v.qty;
       const fee = v.installFeeOverride !== undefined ? v.installFeeOverride : cat.installFee;
       installFeeTotal += fee * v.qty;
-      if(isToiletCat && toiletRemoval[id]){
-        if(toiletRemoval[id].removeOld) removalFee += 800 * v.qty;
-        if(toiletRemoval[id].haul) haulFee += 1800 * v.qty;
+      const rr = REMOVAL_RULES[cat.id];
+      if(rr && toiletRemoval[id]){
+        if(toiletRemoval[id].removeOld && rr.remove) removalFee += rr.remove * v.qty;
+        if(toiletRemoval[id].haul && rr.haul) haulFee += rr.haul * v.qty;
       }
     });
     const catTotal = catProductTotal + installFeeTotal + removalFee + haulFee;
@@ -1264,8 +1289,8 @@ function renderBathSummary(){
       html += `<div class="bath-sum-row"><span>${v.name} ${v.model} ×${v.qty}</span><span>${fmt(v.price*v.qty)}</span></div>`;
     });
     html += `<div class="bath-sum-row"><span>安裝費</span><span>${fmt(installFeeTotal)}</span></div>`;
-    if(removalFee) html += `<div class="bath-sum-row"><span>拆除舊馬桶</span><span>${fmt(removalFee)}</span></div>`;
-    if(haulFee) html += `<div class="bath-sum-row"><span>清運費</span><span>${fmt(haulFee)}</span></div>`;
+    if(removalFee) html += `<div class="bath-sum-row"><span>拆除舊${REMOVAL_RULES[cat.id].what}</span><span>${fmt(removalFee)}</span></div>`;
+    if(haulFee) html += `<div class="bath-sum-row"><span>舊${REMOVAL_RULES[cat.id].what}運棄</span><span>${fmt(haulFee)}</span></div>`;
     grandTotal += catTotal;
   });
 
@@ -1748,6 +1773,9 @@ function computeQuote(){
     if(fc.n>0) add(`固定框安裝費 ${fc.n}個（不打折）`, fc.install);
     if(fc.pending>0) add('固定框',0,{text:'請輸入寬、高',skipCopy:true});
   }
+  const DOOR_REMOVE=1500, DOOR_HAUL=1500;
+  if(document.getElementById('doorRemoveToggle').checked) add('拆除舊拉門（不打折）', DOOR_REMOVE);
+  if(document.getElementById('doorHaulToggle').checked) add('舊拉門運棄（不打折）', DOOR_HAUL);
   return {p,item,m,w,h,film,discount,lines,total};
 }
 
@@ -2376,9 +2404,10 @@ body.embed .btn-copy{padding:12px 11px}
     send(items);
   };
 
-  // ── 衛浴設備：每項產品一列（單價含安裝費），拆除舊馬桶／清運各自一列 ──
+  // ── 衛浴設備：每項產品一列（單價含安裝費），拆除、運棄各自一列 ──
   window.addBathToQuote = function(){
-    var items = [], removeQty = 0, haulQty = 0;
+    var items = [], rm = {};   // rm[品名] = {qty, price}
+    function addRm(name, qty, price){ if(!rm[name]) rm[name]={qty:0,price:price}; rm[name].qty += qty; }
     BATH_CATEGORIES.forEach(function(cat){
       Object.keys(bathCart).forEach(function(id){
         var v = bathCart[id];
@@ -2386,15 +2415,15 @@ body.embed .btn-copy{padding:12px 11px}
         var fee = v.installFeeOverride !== undefined ? v.installFeeOverride : cat.installFee;
         items.push({name:v.name+' '+v.model, specW:'', specH:'', qty:v.qty, price:v.price+(fee||0),
                     note: fee ? '含安裝' : '', photo: BATH_PHOTOS.has(id) ? absUrl('bath_imgs/'+id+'.jpg') : null});
-        if(TOILET_CATS.includes(cat.id) && toiletRemoval[id]){
-          if(toiletRemoval[id].removeOld) removeQty += v.qty;
-          if(toiletRemoval[id].haul) haulQty += v.qty;
+        var rr = REMOVAL_RULES[cat.id];
+        if(rr && toiletRemoval[id]){
+          if(toiletRemoval[id].removeOld && rr.remove) addRm('拆除舊'+rr.what, v.qty, rr.remove);
+          if(toiletRemoval[id].haul && rr.haul) addRm('舊'+rr.what+'運棄', v.qty, rr.haul);
         }
       });
     });
     if(!items.length){ showToast('請先選擇產品'); return; }
-    if(removeQty) items.push({name:'拆除舊馬桶', specW:'', specH:'', qty:removeQty, price:800, note:''});
-    if(haulQty) items.push({name:'清運費', specW:'', specH:'', qty:haulQty, price:1800, note:''});
+    Object.keys(rm).forEach(function(n){ items.push({name:n, specW:'', specH:'', qty:rm[n].qty, price:rm[n].price, note:'非專程'}); });
     send(items);
   };
 
