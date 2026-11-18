@@ -280,11 +280,11 @@ select:focus{border-color:var(--gold)}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div class="form-group">
             <label id="widthLabel">寬度（cm）</label>
-            <input type="number" id="width" placeholder="例：120" min="1" inputmode="numeric" oninput="thresholdSizeOverride=null;renderThresholdDetail();refreshAddonNotes();calculate()">
+            <input type="number" id="width" placeholder="例：120 或 154.5" min="1" step="any" inputmode="decimal" oninput="thresholdSizeOverride=null;renderThresholdDetail();refreshAddonNotes();calculate()">
           </div>
           <div class="form-group">
             <label>高度（cm）</label>
-            <input type="number" id="heightInput" placeholder="請先選擇規格" min="1" inputmode="numeric" disabled oninput="onHeightInput()">
+            <input type="number" id="heightInput" placeholder="請先選擇規格" min="1" step="any" inputmode="decimal" disabled oninput="onHeightInput()">
           </div>
         </div>
         <div class="height-hint" id="heightHint"></div>
@@ -382,7 +382,7 @@ select:focus{border-color:var(--gold)}
         </button>
         <label>折數（輸入 85 代表 85 折）</label>
         <div class="discount-row">
-          <input type="number" id="discount" value="100" min="1" max="100" inputmode="numeric" oninput="onDiscountInput()">
+          <input type="number" id="discount" value="100" min="1" max="100" step="any" inputmode="decimal" oninput="onDiscountInput()">
           <span class="discount-label">折</span>
         </div>
         <div class="presets">
@@ -1757,7 +1757,7 @@ function calculate(){
   renderFilmUI();
   const {w,h,film}=q;
   document.getElementById('filmLabel').textContent=
-    (w>0&&h>0)?`${(w/100).toFixed(2)}m×${(h/100).toFixed(2)}m×10.89=${film.cai}才 × $${film.rate}（${film.name}）→${fmt(film.cost)}`:'請先輸入寬度及選擇規格';
+    (w>0&&h>0)?`${+(w/100).toFixed(4)}m×${+(h/100).toFixed(4)}m×10.89=${film.cai}才 × $${film.rate}（${film.name}）→${fmt(film.cost)}`:'請先輸入寬度及選擇規格';
 
   const qb=document.getElementById('qbAmount');
   if(!q.item){
@@ -2153,7 +2153,7 @@ function glassNoteHtml(){
   const c=getGlassCost();
   if(!c) return '請選擇要更換的玻璃';
   if(!c.total) return '請先輸入寬度';
-  return `${(c.w/100).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}m × ${(c.h/100).toFixed(2)}m × 10.89 × $${c.opt.rate} ＝ <strong>${fmt(c.total)}</strong>（${c.cai.toFixed(1)}才，隨牌價折扣）`;
+  return `${+(c.w/100).toFixed(4)}m × ${+(c.h/100).toFixed(4)}m × 10.89 × $${c.opt.rate} ＝ <strong>${fmt(c.total)}</strong>（${c.cai.toFixed(1)}才，隨牌價折扣）`;
 }
 function renderGlass(){
   const row=document.getElementById('glassRow'), det=document.getElementById('glassDetail');
@@ -2249,8 +2249,8 @@ function renderFrames(){
       <div class="frame-hd"><span>固定框 ${i+1}</span>${frames.length>1?`<button class="frame-del" onclick="frameDel(${i})">✕ 移除</button>`:''}</div>
       <div class="step-row">${Object.keys(FF_TABLES).map(k=>`<button class="chip${f.mat===k?' sel':''}" onclick="frameSet(${i},'mat','${k}')">${FF_TABLES[k].name}</button>`).join('')}</div>
       <div class="frame-dims">
-        <div><label>寬（cm）</label><input type="number" inputmode="numeric" value="${f.w}" placeholder="例 60" oninput="frameInput(${i},'w',this)"></div>
-        <div><label>高（cm）</label><input type="number" inputmode="numeric" value="${f.h}" placeholder="例 190" oninput="frameInput(${i},'h',this)"></div>
+        <div><label>寬（cm）</label><input type="number" step="any" inputmode="decimal" value="${f.w}" placeholder="例 60" oninput="frameInput(${i},'w',this)"></div>
+        <div><label>高（cm）</label><input type="number" step="any" inputmode="decimal" value="${f.h}" placeholder="例 190" oninput="frameInput(${i},'h',this)"></div>
       </div>
       <div class="frame-opts">
         <label class="bath-removal-cb"><input type="checkbox" id="frameMul${i}" ${!r.err&&r.mullion?'checked':''} onchange="frameSet(${i},'mullion',this.checked)"> 加中直腰</label>
